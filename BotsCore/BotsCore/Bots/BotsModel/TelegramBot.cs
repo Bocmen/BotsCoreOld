@@ -37,7 +37,8 @@ namespace BotsCore.Bots.BotsModel
             BotClient.OnMessage += Bot_OnMessage;
             BotClient.OnCallbackQuery += Bot_OnCallbackQuery;
             NameAppStore = $"Telegram Bot: {BotClient.BotId}";
-            EchoLog.Print($"Инциализирован бот: {botInfo.Username}", EchoLog.PrivilegeLog.LogSystem);
+            BotClient.StartReceiving();
+            EchoLog.Print($"Запущен бот: {botInfo.Username}", EchoLog.PrivilegeLog.LogSystem);
         }
         /// <summary>
         /// Метод события кнопок в сообщениях
@@ -54,14 +55,6 @@ namespace BotsCore.Bots.BotsModel
         public IBot.BotTypes GetBotTypes() => IBot.BotTypes.Telegram;
         public string GetId() => botInfo.Id.ToString();
         /// <summary>
-        /// Запуск бота
-        /// </summary>
-        public void Start()
-        {
-            BotClient.StartReceiving();
-            EchoLog.Print($"Запущен бот: {botInfo.Username}", EchoLog.PrivilegeLog.LogSystem);
-        }
-        /// <summary>
         /// Обновление настроек бота
         /// </summary>
         public static void UpdateSetting(IObjectSetting setting)
@@ -70,9 +63,9 @@ namespace BotsCore.Bots.BotsModel
         }
         public void SendDataBot(ObjectDataMessageSend messageSend)
         {
-            Chat chatId = ((Message)messageSend.inBot.DataMessenge).Chat;
+            Chat chatId = messageSend.inBot.DataMessenge != null ? ((Message)messageSend.inBot.DataMessenge).Chat : new Chat() { Id = (long)messageSend.inBot.botID.Id };
             MessegeInfoOld[][] messengeOldInfo = GetOldMessage(messageSend);
-            if (messageSend.EditOldMessageClear)
+            if (messageSend.ClearOldMessage)
             {
                 ClearMessage(messengeOldInfo, messageSend);
                 SaveOldMessageInfo(null, messageSend);
@@ -80,7 +73,7 @@ namespace BotsCore.Bots.BotsModel
             }
             else
             {
-                if (messengeOldInfo == default)
+                if (messengeOldInfo == default || messageSend.IsEditOldMessage == false)
                 {
                     SendMessageOnEdit(messageSend, chatId);
                 }
@@ -93,7 +86,7 @@ namespace BotsCore.Bots.BotsModel
                         if (
                             (lastMessageInfo.TypeMessage == (messageSend.media != null && messageSend.media.Length >= 1)) &&
                             ((messageSend.ButtonsKeyboard == default && messageSend.ButtonsMessage == default) || ((messageSend.ButtonsKeyboard == default && messageSend.ButtonsMessage != default) ? lastMessageInfo.SetMessageButton || (messageSend.Text.Length > (lastMessageInfo.TypeMessage ? LengthText_mediaMessage : LengthText_textMessage)) :
-                            !messageSend.SaveInfoMessenge && (messageSend.Text.Length > ((lastMessageInfo.TypeMessage ? LengthText_mediaMessage : LengthText_textMessage) + (messageSend.ButtonsMessage != default ? 0 : LengthText_textMessage)))
+                            !messageSend.IsSaveInfoMessenge && (messageSend.Text.Length > ((lastMessageInfo.TypeMessage ? LengthText_mediaMessage : LengthText_textMessage) + (messageSend.ButtonsMessage != default ? 0 : LengthText_textMessage)))
                             )
                             )
                            )
@@ -181,7 +174,7 @@ namespace BotsCore.Bots.BotsModel
             if (messageSend.ButtonsKeyboard != default && messageSend.ButtonsMessage != default)
             {
                 if (
-                     messageSend.SaveInfoMessenge || ((messageSend.media != default && messageSend.media.Length == 1) ? messageSend.Text.Length <= LengthText_mediaMessage :
+                     messageSend.IsSaveInfoMessenge || ((messageSend.media != default && messageSend.media.Length == 1) ? messageSend.Text.Length <= LengthText_mediaMessage :
                     (messageSend.Text.Length <= LengthText_textMessage))
                    )
                 {
@@ -286,7 +279,7 @@ namespace BotsCore.Bots.BotsModel
                         replyMarkup: replyMarkup
                         ).Result.MessageId,
 
-                    MediaType.GIF or MediaType.Video => 
+                    MediaType.GIF or MediaType.Video =>
                     (BotClient.SendAnimationAsync(
                         chatId,
                         file,
@@ -335,7 +328,8 @@ namespace BotsCore.Bots.BotsModel
         }
         private void SaveOldMessageInfo(IEnumerable<IEnumerable<MessegeInfoOld>> messegeInfoOlds, ObjectDataMessageSend messageSend)
         {
-            messageSend.inBot.BotUser.SetAppData(NameAppStore, (TelegramBot.LastMessageInfo, messageSend.SaveInfoMessenge ? JsonConvert.SerializeObject(messegeInfoOlds) : null));
+            if (messageSend.IsSaveInfoMessenge)
+                messageSend.inBot.BotUser.SetAppData(NameAppStore, (TelegramBot.LastMessageInfo, messageSend.IsSaveInfoMessenge ? JsonConvert.SerializeObject(messegeInfoOlds) : null));
         }
         private static InputMediaBase GetInputMediaBase(Media media, string Comment = null, Telegram.Bot.Types.Enums.ParseMode parseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown)
         {
