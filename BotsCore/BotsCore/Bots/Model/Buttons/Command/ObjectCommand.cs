@@ -19,7 +19,7 @@ namespace BotsCore.Bots.Model.Buttons.Command
         }
         public bool IsSame(ObjectDataMessageInBot messageInBot)
         {
-            string textCommand = messageInBot.messageText;
+            string textCommand = messageInBot.MessageText;
             textCommand = textCommand != null ? textCommand.Replace("  ", " ").ToLower() : null;
             foreach (var elemCommand in commands)
             {
