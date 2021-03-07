@@ -16,6 +16,16 @@ namespace BotsCore.Bots.Model
         public ModelUser User { get; private set; }
         public ModelBotUser BotUser { get; private set; }
 
+        public ObjectDataMessageInBot() { }
+
+        public ObjectDataMessageInBot(ModelUser user, ModelBotUser botUser)
+        {
+            User = user;
+            BotUser = botUser;
+            botID = botUser.BotID;
+            botHendler = ManagerBots.GetBot(botID.BotKey);
+        }
+
         public void LoadInfo_User(Action<ObjectDataMessageInBot> action)
         {
             var infoUser = ManagerUser.GetUser(botID);
