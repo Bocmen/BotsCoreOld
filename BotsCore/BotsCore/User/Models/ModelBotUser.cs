@@ -11,11 +11,11 @@ namespace BotsCore.User.Models
         /// </summary>
         public BotID BotID { get; protected set; }
         public DataPage Page;
-        public LinkedList<(string NameApp, string NamePage)> HistoryPage = new LinkedList<(string NameApp, string NamePage)>();
+        public LinkedList<(string NameApp, string NamePage)> HistoryPage = new();
         /// <summary>
         /// Данные микросервисов
         /// </summary>
-        private readonly Dictionary<string, Dictionary<string, object>> appData = new Dictionary<string, Dictionary<string, object>>();
+        public readonly Dictionary<string, Dictionary<string, object>> appData = new();
 
         public ModelBotUser(BotID botID, DataPage Page)
         {
