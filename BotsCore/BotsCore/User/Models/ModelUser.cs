@@ -3,6 +3,8 @@ using static BotsCore.Moduls.Translate.Lang;
 using System.IO;
 using System.Data.SQLite;
 using Newtonsoft.Json;
+using System;
+using System.Linq;
 
 namespace BotsCore.User.Models
 {
@@ -105,6 +107,11 @@ namespace BotsCore.User.Models
             ModelUser resul = JsonConvert.DeserializeObject<ModelUser>(json);
             resul.IdTable = IdTable;
             return resul;
+        }
+
+        public void AllEditBotUsers(Func<ModelBotUser, ModelBotUser> editFunction)
+        {
+            lock (BotsAccount) { BotsAccount = BotsAccount.Select(x => editFunction.Invoke(x)).ToList(); }
         }
     }
 }
