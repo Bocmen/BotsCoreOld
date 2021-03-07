@@ -26,8 +26,8 @@ namespace BotsCore.Bots.BotsModel
         private readonly string NameAppStore;
         private const string LastMessageInfo = "LastMessageInfo";
         // ======================================================================================== Clear Data
-        private readonly Text Text_ClearMessage = new Text(Lang.LangTypes.ru, "Сообщение очищено");
-        private readonly Media ClearMediaData = new Media("http://cdn.onlinewebfonts.com/svg/img_431947.png", MediaType.Photo);
+        private readonly Text Text_ClearMessage = new(Lang.LangTypes.ru, "Сообщение очищено");
+        private readonly Media ClearMediaData = new("http://cdn.onlinewebfonts.com/svg/img_431947.png", MediaType.Photo);
 
         public TelegramBot(string Token, IObjectSetting setting)
         {
@@ -51,7 +51,7 @@ namespace BotsCore.Bots.BotsModel
         /// <summary>
         /// Метод обработки всех событий бота
         /// </summary>
-        private void Bot_InMessage(Message messageData, string CallbackQueryData = null) => ManagerPage.InMessageBot(new ObjectDataMessageInBot() { DataMessenge = messageData, messageText = messageData.Text, callbackData = CallbackQueryData, botID = new User.Models.BotID() { bot = User.Models.BotID.TypeBot.Telegram, BotKey = ManagerBots.GetNameBot(this), Id = messageData.Chat.Id }, botHendler = this });
+        private void Bot_InMessage(Message messageData, string CallbackQueryData = null) => ManagerPage.InMessageBot(new ObjectDataMessageInBot() { DataMessenge = messageData, MessageText = messageData.Text, CallbackData = CallbackQueryData, BotID = new User.Models.BotID() { bot = User.Models.BotID.TypeBot.Telegram, BotKey = ManagerBots.GetNameBot(this), Id = messageData.Chat.Id }, BotHendler = this });
         public IBot.BotTypes GetBotTypes() => IBot.BotTypes.Telegram;
         public string GetId() => botInfo.Id.ToString();
         /// <summary>
@@ -61,27 +61,27 @@ namespace BotsCore.Bots.BotsModel
         {
 
         }
-        public void SendDataBot(ObjectDataMessageSend messageSend)
+        public object SendDataBot(ObjectDataMessageSend messageSend)
         {
-            Chat chatId = messageSend.inBot.DataMessenge != null ? ((Message)messageSend.inBot.DataMessenge).Chat : new Chat() { Id = (long)messageSend.inBot.botID.Id };
+            Chat chatId = messageSend.InBot.DataMessenge != null ? ((Message)messageSend.InBot.DataMessenge).Chat : new Chat() { Id = (long)messageSend.InBot.BotID.Id };
             MessegeInfoOld[][] messengeOldInfo = GetOldMessage(messageSend);
             if (messageSend.ClearOldMessage)
             {
-                ClearMessage(messengeOldInfo, messageSend);
+                ClearMessage(messengeOldInfo, messageSend, chatId);
                 SaveOldMessageInfo(null, messageSend);
-                return;
+                return null;
             }
             else
             {
                 if (messengeOldInfo == default || messageSend.IsEditOldMessage == false)
                 {
-                    SendMessageOnEdit(messageSend, chatId);
+                    return SendMessageOnEdit(messageSend, chatId);
                 }
                 else
                 {
                     if (messengeOldInfo?.Last().Length == 1)
                     {
-                        ClearMessage(messengeOldInfo.Take(messengeOldInfo.Length - 1), messageSend);
+                        ClearMessage(messengeOldInfo.Take(messengeOldInfo.Length - 1), messageSend, chatId);
                         MessegeInfoOld lastMessageInfo = messengeOldInfo.Last().Last();
                         if (
                             (lastMessageInfo.TypeMessage == (messageSend.media != null && messageSend.media.Length >= 1)) &&
@@ -91,7 +91,7 @@ namespace BotsCore.Bots.BotsModel
                             )
                            )
                         {
-                            MessegeInfoOld messegeSendInfo = new MessegeInfoOld
+                            MessegeInfoOld messegeSendInfo = new()
                             {
                                 TypeMessage = lastMessageInfo.TypeMessage
                             };
@@ -107,13 +107,13 @@ namespace BotsCore.Bots.BotsModel
                                 messegeSendInfo.Id = BotClient.EditMessageTextAsync(chatId, lastMessageInfo.Id, GetLimitText(ref messageSend.Text, LengthText_textMessage), Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: replyMarkup).Result.MessageId;
                             }
 
-                            SendMessageOnEdit(messageSend, chatId, new List<MessegeInfoOld[]> { new MessegeInfoOld[] { messegeSendInfo } });
+                            return SendMessageOnEdit(messageSend, chatId, new List<MessegeInfoOld[]> { new MessegeInfoOld[] { messegeSendInfo } });
 
                             InlineKeyboardMarkup IsGetMessegeButtonsSend(uint textLimit)
                             {
                                 if (lastMessageInfo.SetMessageButton && (messageSend.Text.Length <= textLimit))
                                 {
-                                    InlineKeyboardMarkup resul = GetInlineKeyboard(messageSend.ButtonsMessage, messageSend.inBot.User.Lang);
+                                    InlineKeyboardMarkup resul = GetInlineKeyboard(messageSend.ButtonsMessage, messageSend.InBot.User.Lang);
                                     messageSend.ButtonsMessage = default;
                                     messegeSendInfo.SetMessageButton = true;
                                     return resul;
@@ -123,19 +123,19 @@ namespace BotsCore.Bots.BotsModel
                         }
                         else
                         {
-                            ClearMessage(new MessegeInfoOld[][] { new MessegeInfoOld[] { lastMessageInfo } }, messageSend);
-                            SendMessageOnEdit(messageSend, chatId);
+                            ClearMessage(new MessegeInfoOld[][] { new MessegeInfoOld[] { lastMessageInfo } }, messageSend, chatId);
+                            return SendMessageOnEdit(messageSend, chatId);
                         }
                     }
                     else
                     {
-                        ClearMessage(messengeOldInfo, messageSend);
-                        SendMessageOnEdit(messageSend, chatId);
+                        ClearMessage(messengeOldInfo, messageSend, chatId);
+                        return SendMessageOnEdit(messageSend, chatId);
                     }
                 }
             }
         }
-        private void SendMessageOnEdit(ObjectDataMessageSend messageSend, Chat chatId, List<MessegeInfoOld[]> sendMessageInfo = null)
+        private object SendMessageOnEdit(ObjectDataMessageSend messageSend, Chat chatId, List<MessegeInfoOld[]> sendMessageInfo = null)
         {
             if (sendMessageInfo == default)
                 sendMessageInfo = new List<MessegeInfoOld[]>();
@@ -160,7 +160,7 @@ namespace BotsCore.Bots.BotsModel
                         {
                             new MessegeInfoOld()
                             {
-                                Id = SendMedia(media_elem, null, GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.inBot.User.Lang)),
+                                Id = SendMedia(media_elem, null, GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang)),
                                 SetMessageButton = true,
                                 TypeMessage = true
                             }
@@ -181,9 +181,9 @@ namespace BotsCore.Bots.BotsModel
                     BotClient.SendTextMessageAsync
                     (
                         chatId,
-                        ManagerPage.settingManagerPage.GetTextSetButtons(messageSend.inBot.User.Lang),
+                        ManagerPage.SettingManagerPage.GetTextSetButtons(messageSend.InBot.User.Lang),
                         Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.inBot.User.Lang)
+                        replyMarkup: GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang)
                     );
                     messageSend.ButtonsKeyboard = null;
                 }
@@ -193,8 +193,8 @@ namespace BotsCore.Bots.BotsModel
             {
                 IReplyMarkup replyMarkup = (messageSend.ButtonsKeyboard == default ?
                     (messageSend.Text.Length <= LengthText_mediaMessage ?
-                    GetInlineKeyboard(messageSend.ButtonsMessage, messageSend.inBot.User.Lang) : default
-                    ) : GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.inBot.User.Lang));
+                    GetInlineKeyboard(messageSend.ButtonsMessage, messageSend.InBot.User.Lang) : default
+                    ) : GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang));
                 string textSend = GetLimitText(ref messageSend.Text, LengthText_mediaMessage);
                 sendMessageInfo.Add(new MessegeInfoOld[] { new MessegeInfoOld() { Id = SendMedia(messageSend.media.First(), textSend, replyMarkup), SetMessageButton = true, TypeMessage = true } });
                 messageSend.media = default;
@@ -202,7 +202,7 @@ namespace BotsCore.Bots.BotsModel
                 if (!string.IsNullOrEmpty(messageSend.Text))
                     SendMessageOnEdit(messageSend, chatId, sendMessageInfo);
                 SaveOldMessageInfo(sendMessageInfo, messageSend);
-                return;
+                return sendMessageInfo.ToArray();
             }
             else if (!string.IsNullOrWhiteSpace(messageSend.Text))
             {
@@ -211,18 +211,18 @@ namespace BotsCore.Bots.BotsModel
                 bool SetMessageButton = true;
                 if (messageSend.ButtonsKeyboard != default && messageSend.ButtonsMessage != default)
                 {
-                    replyMarkup = GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.inBot.User.Lang);
+                    replyMarkup = GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang);
                     messageSend.ButtonsKeyboard = null;
                     SetMessageButton = false;
                 }
                 else if (messageSend.ButtonsMessage != default)
                 {
-                    replyMarkup = GetInlineKeyboard(messageSend.ButtonsMessage, messageSend.inBot.User.Lang);
+                    replyMarkup = GetInlineKeyboard(messageSend.ButtonsMessage, messageSend.InBot.User.Lang);
                     messageSend.ButtonsMessage = null;
                 }
                 else if (messageSend.ButtonsKeyboard != default)
                 {
-                    replyMarkup = GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.inBot.User.Lang);
+                    replyMarkup = GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang);
                     messageSend.ButtonsKeyboard = null;
                 }
 
@@ -242,9 +242,10 @@ namespace BotsCore.Bots.BotsModel
                 if (!string.IsNullOrWhiteSpace(messageSend.Text))
                     goto resendMessage;
                 SaveOldMessageInfo(sendMessageInfo, messageSend);
-                return;
+                return sendMessageInfo.ToArray();
             }
             SaveOldMessageInfo(sendMessageInfo, messageSend);
+            return sendMessageInfo.ToArray();
             void SendGroup(IEnumerable<Media> medias)
             {
                 uint count = 0;
@@ -260,14 +261,14 @@ namespace BotsCore.Bots.BotsModel
                     }
                     else
                     {
-                        sendMessageInfo.Add(new MessegeInfoOld[] { new MessegeInfoOld() { Id = SendMedia(group.Last(), null, GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.inBot.User.Lang)), SetMessageButton = true, TypeMessage = true } });
+                        sendMessageInfo.Add(new MessegeInfoOld[] { new MessegeInfoOld() { Id = SendMedia(group.Last(), null, GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang)), SetMessageButton = true, TypeMessage = true } });
                         messageSend.ButtonsKeyboard = default;
                     }
                 }
             }
             int SendMedia(Media media, string textSend = null, IReplyMarkup replyMarkup = null)
             {
-                InputOnlineFile file = new InputOnlineFile(media.Path);
+                InputOnlineFile file = new(media.Path);
                 return media.Type switch
                 {
                     MediaType.Photo =>
@@ -315,21 +316,26 @@ namespace BotsCore.Bots.BotsModel
         /// </summary>
         private MessegeInfoOld[][] GetOldMessage(ObjectDataMessageSend messageSend)
         {
-            string LastMessageInfo = messageSend.inBot.BotUser.GetAppData<string>(NameAppStore, TelegramBot.LastMessageInfo);
-            if (LastMessageInfo != null)
+            if (messageSend.MessageEditObject is MessegeInfoOld[][] resul)
+                return resul;
+            else
             {
-                MessegeInfoOld[][] resul = JsonConvert.DeserializeObject<MessegeInfoOld[][]>(LastMessageInfo);
-                if (resul != default && resul.Length > 0)
-                    return resul;
-                else
-                    return null;
+                string LastMessageInfo = messageSend.InBot.BotUser.GetAppData<string>(NameAppStore, TelegramBot.LastMessageInfo);
+                if (LastMessageInfo != null)
+                {
+                    resul = JsonConvert.DeserializeObject<MessegeInfoOld[][]>(LastMessageInfo);
+                    if (resul != default && resul.Length > 0)
+                        return resul;
+                    else
+                        return null;
+                }
             }
             return null;
         }
         private void SaveOldMessageInfo(IEnumerable<IEnumerable<MessegeInfoOld>> messegeInfoOlds, ObjectDataMessageSend messageSend)
         {
             if (messageSend.IsSaveInfoMessenge)
-                messageSend.inBot.BotUser.SetAppData(NameAppStore, (TelegramBot.LastMessageInfo, messageSend.IsSaveInfoMessenge ? JsonConvert.SerializeObject(messegeInfoOlds) : null));
+                messageSend.InBot.BotUser.SetAppData(NameAppStore, (LastMessageInfo, messageSend.IsSaveInfoMessenge ? JsonConvert.SerializeObject(messegeInfoOlds) : null));
         }
         private static InputMediaBase GetInputMediaBase(Media media, string Comment = null, Telegram.Bot.Types.Enums.ParseMode parseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown)
         {
@@ -357,11 +363,10 @@ namespace BotsCore.Bots.BotsModel
             inputMediaBase.Media = inputMediaBase.Media;
             return inputMediaBase;
         }
-        private void ClearMessage(IEnumerable<IEnumerable<MessegeInfoOld>> messeges, ObjectDataMessageSend messageSend)
+        private void ClearMessage(IEnumerable<IEnumerable<MessegeInfoOld>> messeges, ObjectDataMessageSend messageSend, Chat chat)
         {
             if (messeges == default) return;
-            Chat chat = ((Message)messageSend.inBot.DataMessenge).Chat;
-            string textClear = Text_ClearMessage.GetText(messageSend.inBot.User.Lang);
+            string textClear = Text_ClearMessage.GetText(messageSend.InBot.User.Lang);
             foreach (var group in messeges)
             {
                 foreach (var messege in group)
