@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using System;
 using BotsCore.Moduls;
+using BotsCore.User;
 
 namespace BotsCore
 {
@@ -24,7 +25,52 @@ namespace BotsCore
         /// <summary>
         /// Инциализация менеджера страниц, необходимо передать его настройки
         /// </summary>
-        public static void Start(ISettingManagerPage setting) => settingManagerPage = setting;
+        public static void Start(ISettingManagerPage setting)
+        {
+            settingManagerPage = setting;
+            ManagerUser.AllEditUsers
+                (x =>
+                {
+                    x.AllEditBotUsers(y =>
+                    {
+                        if (y.Page.ObjectPage is not Page)
+                        {
+                            y.Page.ObjectPage = GetPageUser(new ObjectDataMessageInBot(x, y));
+                        }
+                        return y;
+                    });
+                    return x;
+                });
+        }
+        private static Page GetPageUser(ObjectDataMessageInBot inBot)
+        {
+            if (inBot.BotUser.Page.ObjectPage == default)
+            {
+                (string NameApp, string NamePage) = settingManagerPage.GetPageCreteUser();
+                return (Page)GetPage(NameApp, NamePage, inBot.botHendler.GetBotTypes(), inBot.botHendler.GetId());
+            }
+            if (inBot.BotUser.Page.ObjectPage is Page page)
+            {
+                return page;
+            }
+            else
+            {
+                foreach (var elem in ListPage)
+                {
+                    if (elem.GetNameApp() == inBot.BotUser.Page.NameApp)
+                    {
+                        inBot.BotUser.Page.ObjectPage = JsonConvert.DeserializeObject(inBot.BotUser.Page.ObjectPage.ToString(), elem.GetTypePage(inBot.BotUser.Page.NamePage));
+                        if (inBot.BotUser.Page.ObjectPage is Page pageDeserialize)
+                        {
+                            try { pageDeserialize.StoreLoad(inBot); } catch (Exception e) { EchoLog.Print($"Не удалось обработать метод загрузки данных страницы из бд, лог оишибки: {e.Message}"); }
+                            return pageDeserialize;
+                        }
+                        break;
+                    }
+                }
+            }
+            return null;
+        }
         /// <summary>
         /// Получить экземпляр страницы
         /// </summary>
@@ -47,10 +93,12 @@ namespace BotsCore
         public static bool SetPage(ObjectDataMessageInBot inBot, string NameApp, string NamePage)
         {
             var pageO = GetPage(NameApp, NamePage, inBot.botHendler.GetBotTypes(), inBot.botHendler.GetId());
-            if (pageO != null && pageO is IPage page)
+            if (pageO != null && pageO is Page page)
             {
+                if (inBot.BotUser.Page.ObjectPage is Page pageOpen)
+                    pageOpen.Close(inBot);
                 inBot.BotUser.Page = new User.Models.ModelBotUser.DataPage() { NameApp = NameApp, NamePage = NamePage, ObjectPage = pageO };
-                ((IPage)inBot.BotUser.Page.ObjectPage).SetPage(inBot);
+                ((Page)inBot.BotUser.Page.ObjectPage).Open(inBot);
                 return true;
             }
             return false;
@@ -61,31 +109,8 @@ namespace BotsCore
         public static void InMessageBot(ObjectDataMessageInBot inBot)
         {
             inBot.LoadInfo_User(settingManagerPage.GetRegisterMethod());
-            if (inBot.BotUser.Page.ObjectPage == default)
-            {
-                var PageSetInfo = settingManagerPage.GetPageCreteUser();
-                inBot.BotUser.Page.ObjectPage = GetPage(PageSetInfo.NameApp, PageSetInfo.NamePage, inBot.botHendler.GetBotTypes(), inBot.botHendler.GetId());
-            }
-            if (inBot.BotUser.Page.ObjectPage is IPage page)
-            {
-                try { page.InMessage(inBot); } catch (Exception e) { EchoLog.Print($"Не удалось обработать сообщение, лог ошибки: {e.Message}"); }
-            }
-            else
-            {
-                foreach (var elem in ListPage)
-                {
-                    if (elem.GetNameApp() == inBot.BotUser.Page.NameApp)
-                    {
-                        inBot.BotUser.Page.ObjectPage = JsonConvert.DeserializeObject(inBot.BotUser.Page.ObjectPage.ToString(), elem.GetTypePage(inBot.BotUser.Page.NamePage));
-                        if (inBot.BotUser.Page.ObjectPage is IPage pageDeserialize)
-                        {
-                            try { pageDeserialize.LoadPageStore(inBot); } catch (Exception e) { EchoLog.Print($"Не удалось обработать метод загрузки данных страницы из бд, лог оишибки: {e.Message}"); }
-                            InMessageBot(inBot);
-                        }
-                        break;
-                    }
-                }
-            }
+            try { GetPageUser(inBot).InMessage(inBot); } catch (Exception e) { EchoLog.Print($"Не удалось обработать сообщение, лог ошибки: {e.Message}"); }
+            inBot.User.LoadToDataBD();
         }
         /// <summary>
         /// Установить страницу пользователю и сохранить в истории
@@ -96,7 +121,7 @@ namespace BotsCore
         /// <returns>true- страница найдена и установлена, false - произошла ошибка при установке страницы</returns>
         public static bool SetPageSaveHistory(ObjectDataMessageInBot inBot, string NameApp, string NamePage)
         {
-            if (BotsCore.ManagerPage.SetPage(inBot, NameApp, NamePage))
+            if (SetPage(inBot, NameApp, NamePage))
             {
                 AddHistryPageNonCheckManagerPage(inBot, NameApp, NamePage);
                 return true;
