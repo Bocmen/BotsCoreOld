@@ -4,13 +4,15 @@ using System.Data.SQLite;
 using System.IO;
 using BotsCore.Moduls;
 using BotsCore.Moduls.GetSetting.Interface;
+using System;
+using System.Linq;
 
 namespace BotsCore.User
 {
     public static class ManagerUser
     {
 
-        private static readonly List<ModelUser> users = new();
+        private static List<ModelUser> users = new();
         public static string PatchTableUsersInfo { get; private set; }
         public static string BdConnectionUsersInfo { get; private set; }
 
@@ -73,6 +75,10 @@ namespace BotsCore.User
                 user.DeliteUserDataBD();
                 users.Remove(user);
             }
+        }
+        public static void AllEditUsers(Func<ModelUser, ModelUser> editFunction)
+        {
+            lock (users) { users = users.Select(x => editFunction.Invoke(x)).ToList(); }
         }
     }
 }
