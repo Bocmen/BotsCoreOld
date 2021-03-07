@@ -8,11 +8,11 @@ namespace BotsCore.Bots.Model
     public partial record ObjectDataMessageInBot
     {
         public delegate void RegisterUser(ObjectDataMessageInBot inBot);
-        public string messageText { get; init; }
-        public string callbackData { get; init; }
+        public string MessageText { get; init; }
+        public string CallbackData { get; init; }
         public object DataMessenge { get; init; }
-        public IBot botHendler { get; init; }
-        public BotID botID { get; init; }
+        public IBot BotHendler { get; init; }
+        public BotID BotID { get; init; }
         public ModelUser User { get; private set; }
         public ModelBotUser BotUser { get; private set; }
 
@@ -22,13 +22,13 @@ namespace BotsCore.Bots.Model
         {
             User = user;
             BotUser = botUser;
-            botID = botUser.BotID;
-            botHendler = ManagerBots.GetBot(botID.BotKey);
+            BotID = botUser.BotID;
+            BotHendler = ManagerBots.GetBot(BotID.BotKey);
         }
 
         public void LoadInfo_User(Action<ObjectDataMessageInBot> action)
         {
-            var infoUser = ManagerUser.GetUser(botID);
+            var infoUser = ManagerUser.GetUser(BotID);
             if (infoUser != null)
             {
                 User = infoUser.Value.user;
@@ -37,12 +37,15 @@ namespace BotsCore.Bots.Model
             else
             {
                 User = new ModelUser();
-                BotUser = new ModelBotUser(botID, new ModelBotUser.DataPage());
+                BotUser = new ModelBotUser(BotID, new ModelBotUser.DataPage());
                 User.AddModelBotUser(BotUser);
                 ManagerUser.AddUser(User);
                 if (action != null)
                     action.Invoke(this);
             }
         }
+        public static implicit operator BotID(ObjectDataMessageInBot v) => v.BotID;
+        public static implicit operator ModelUser(ObjectDataMessageInBot v) => v.User;
+        public static implicit operator ModelBotUser(ObjectDataMessageInBot v) => v.BotUser;
     }
 }
