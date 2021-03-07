@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31025.194
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotsCore", "BotsCore\BotsCore.csproj", "{450C5C82-6006-4343-91B1-1F38F193C559}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{450C5C82-6006-4343-91B1-1F38F193C559}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{450C5C82-6006-4343-91B1-1F38F193C559}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{450C5C82-6006-4343-91B1-1F38F193C559}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{450C5C82-6006-4343-91B1-1F38F193C559}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DC13D7EE-5BC7-4D11-832B-35D7517B186A}
+	EndGlobalSection
+EndGlobal
