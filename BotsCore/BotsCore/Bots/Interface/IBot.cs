@@ -6,7 +6,7 @@ namespace BotsCore.Bots.Interface
     {
         public BotTypes GetBotTypes();
         public string GetId();
-        public void SendDataBot(ObjectDataMessageSend messageSend);
+        public object SendDataBot(ObjectDataMessageSend messageSend);
         public enum BotTypes
         {
             VK,
