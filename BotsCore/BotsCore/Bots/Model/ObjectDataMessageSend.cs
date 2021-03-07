@@ -5,16 +5,17 @@ namespace BotsCore.Bots.Model
     public partial class ObjectDataMessageSend
     {
         public static bool Default_EditOldMessage = true;
-        public static bool Default_AddBuffer = true;
         public static bool Default_SaveInfoMessenge = true;
 
         public ObjectDataMessageInBot inBot { get; private set; }
 
-        public bool EditOldMessageClear { get; init; }
+        private bool? saveInfoMessenge;
+        private bool? editOldMessage = null;
+
+        public bool ClearOldMessage { get; init; }
         public string Text;
         public Media[] media;
-        private bool? editOldMessage = null;
-        public bool EditOldMessage
+        public bool IsEditOldMessage
         {
             get
             {
@@ -27,25 +28,10 @@ namespace BotsCore.Bots.Model
                 editOldMessage = value;
             }
         }
-        public bool? addBuffer = null;
-        public bool AddBuffer
-        {
-            get
-            {
-                if (addBuffer != null)
-                    return (bool)addBuffer;
-                return Default_AddBuffer;
-            }
-            init
-            {
-                addBuffer = value;
-            }
-        }
         public bool Widget { get; init; }
         public Button[][] ButtonsMessage;
         public Button[][] ButtonsKeyboard;
-        private bool? saveInfoMessenge;
-        public bool SaveInfoMessenge
+        public bool IsSaveInfoMessenge
         {
             get
             {
