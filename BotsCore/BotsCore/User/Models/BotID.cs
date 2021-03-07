@@ -1,4 +1,7 @@
-﻿namespace BotsCore.User.Models
+﻿using BotsCore.Bots.Model;
+using System;
+
+namespace BotsCore.User.Models
 {
     /// <summary>
     /// Личный иденификатор бота
@@ -24,6 +27,7 @@
         }
         public static bool operator ==(BotID a, BotID b) => a?.bot == b?.bot && a?.Id == b?.Id && a.BotKey == b.BotKey;
         public static bool operator !=(BotID a, BotID b) => !(a == b);
+
         public override bool Equals(object obj)
         {
             if (obj is BotID botID)
@@ -31,5 +35,6 @@
             return false;
         }
         public override int GetHashCode() => $"{BotKey}{Id}{bot}".GetHashCode();
+        public override string ToString() => $"BotKey: {BotKey},Id: {Id},TypeBot: {bot}";
     }
 }
