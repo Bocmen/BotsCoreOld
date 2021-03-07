@@ -12,7 +12,7 @@ namespace BotsCore.Moduls
         /// </summary>
         /// <param name="TextLog">Текст лога</param>
         /// <param name="privilege">Приоритет события</param>
-        public static void Print(string TextLog, PrivilegeLog privilege = PrivilegeLog.Info)
+        public static void Print(string TextLog, string Path, PrivilegeLog privilege = PrivilegeLog.Info)
         {
             try
             {
@@ -31,11 +31,12 @@ namespace BotsCore.Moduls
                         Console.ForegroundColor = ConsoleColor.DarkYellow;
                         break;
                 }
-                Console.WriteLine($"[{new System.Diagnostics.StackTrace().GetFrame(1).GetMethod().DeclaringType.FullName}] [{DateTime.Now.ToLocalTime()} {privilege}] {TextLog}");
+                Console.WriteLine($"[{Path}] [{DateTime.Now.ToLocalTime()} {privilege}] {TextLog}");
                 Console.ResetColor();
             }
             catch { }
         }
+        public static void Print(string TextLog, PrivilegeLog privilege = PrivilegeLog.Info) => Print(TextLog, new System.Diagnostics.StackTrace().GetFrame(1).GetMethod().DeclaringType.FullName.ToString(), privilege);
         /// <summary>
         /// Виды привелегий
         /// </summary>
