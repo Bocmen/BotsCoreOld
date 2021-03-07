@@ -4,15 +4,17 @@ namespace BotsCore.Bots.Model
 {
     public partial class ObjectDataMessageSend
     {
+#pragma warning disable CA2211 // Поля, не являющиеся константами, не должны быть видимыми
         public static bool Default_EditOldMessage = true;
         public static bool Default_SaveInfoMessenge = true;
+#pragma warning restore CA2211 // Поля, не являющиеся константами, не должны быть видимыми
 
-        public ObjectDataMessageInBot inBot { get; private set; }
+        public ObjectDataMessageInBot InBot { get; private set; }
 
         private bool? saveInfoMessenge;
         private bool? editOldMessage = null;
 
-        public bool ClearOldMessage { get; init; }
+        public bool ClearOldMessage;
         public string Text;
         public Media[] media;
         public bool IsEditOldMessage
@@ -28,7 +30,7 @@ namespace BotsCore.Bots.Model
                 editOldMessage = value;
             }
         }
-        public bool Widget { get; init; }
+        public bool Widget;
         public Button[][] ButtonsMessage;
         public Button[][] ButtonsKeyboard;
         public bool IsSaveInfoMessenge
@@ -44,8 +46,9 @@ namespace BotsCore.Bots.Model
                 saveInfoMessenge = value;
             }
         }
+        public object MessageEditObject;
 
-        public ObjectDataMessageSend(ObjectDataMessageInBot inBot) => this.inBot = inBot;
+        public ObjectDataMessageSend(ObjectDataMessageInBot inBot) => this.InBot = inBot;
 
         public class Media
         {
