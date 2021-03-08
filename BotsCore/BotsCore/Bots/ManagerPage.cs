@@ -6,7 +6,6 @@ using System;
 using BotsCore.Moduls;
 using BotsCore.User;
 using BotsCore.Bots;
-using System.Threading.Tasks;
 
 namespace BotsCore
 {
@@ -183,18 +182,23 @@ namespace BotsCore
                 inBot.BotUser.HistoryPage.RemoveFirst();
             inBot.BotUser.HistoryPage.AddLast((appName, namePage));
         }
-
+        /// <summary>
+        /// Отправка данных пользователю бота
+        /// </summary>
+        /// <param name="messageSend">Данные для отправки</param>
+        /// <param name="sendPage">Откуда данные отправляются, null - неизвестный источник, обьект Page указывает с какой страницы производилась отправка</param>
+        /// <returns></returns>
         public static (object messageSendInfo, bool statusSend) SendDataBot(ObjectDataMessageSend messageSend, Page sendPage = null)
         {
             try
             {
                 object messageSendInfo;
-                bool statusSend;
                 Page pageSetUser = GetPageUser(messageSend.InBot);
                 messageSend.InBot.BotUser.SetAppData(NameAppStore, (NameIsWidgetStore, messageSend.Widget));
+                IBot botSend = messageSend.InBot.BotHendler != default ? messageSend.InBot.BotHendler : ManagerBots.GetBot(messageSend.InBot.BotID.BotKey);
                 if (messageSend.Widget)
                 {
-                    (messageSendInfo, statusSend) = ManagerBots.SendDataBot(sendPage == pageSetUser ? messageSend : pageSetUser.FilterSetWidget(messageSend));
+                    messageSendInfo = botSend.SendDataBot(sendPage == pageSetUser ? messageSend : pageSetUser.FilterSetWidget(messageSend));
                     pageSetUser.EventSetWidget(messageSend, sendPage, messageSendInfo);
                 }
                 else
@@ -202,15 +206,15 @@ namespace BotsCore
                     if (sendPage != null)
                     {
                         if (pageSetUser != sendPage)
-                            (messageSendInfo, statusSend) = ManagerBots.SendDataBot(pageSetUser.FilterAlienMessage(messageSend));
+                            messageSendInfo = botSend.SendDataBot(pageSetUser.FilterAlienMessage(messageSend));
                         else
-                            (messageSendInfo, statusSend) = ManagerBots.SendDataBot(messageSend);
+                            messageSendInfo = botSend.SendDataBot(messageSend);
                     }
                     else
-                        (messageSendInfo, statusSend) = ManagerBots.SendDataBot(pageSetUser.FilterUnknownSenderMessage(messageSend));
+                        messageSendInfo = botSend.SendDataBot(pageSetUser.FilterUnknownSenderMessage(messageSend));
                 }
                 messageSend.InBot.User.LoadToDataBD();
-                return (messageSendInfo, statusSend);
+                return (messageSendInfo, true);
             }
             catch (Exception e)
             {
