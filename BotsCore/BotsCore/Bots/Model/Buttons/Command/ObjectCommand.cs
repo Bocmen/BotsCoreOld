@@ -12,7 +12,7 @@ namespace BotsCore.Bots.Model.Buttons.Command
 
         public ObjectCommand(InvokeCommand method, params object[] commands)
         {
-            if (commands.FirstOrDefault(x => !(x.GetType() == typeof(string) || x.GetType() == typeof(IGetCommandText))) != default)
+            if (commands.FirstOrDefault(x => !(x is string || x is IGetCommandText)) != default)
                 throw new Exception("Не все команды подходят для работы с данным элементов");
             this.commands = commands;
             invokeMethod = method;
