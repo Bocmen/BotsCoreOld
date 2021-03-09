@@ -73,7 +73,7 @@ namespace BotsCore.Bots.BotsModel
             }
             else
             {
-                if (messengeOldInfo == default || messageSend.IsEditOldMessage == false)
+                if (messengeOldInfo == default || !messageSend.IsEditOldMessage || (messageSend.media != null && messageSend.media.Length > 1))
                 {
                     return SendMessageOnEdit(messageSend, chatId);
                 }
@@ -140,6 +140,9 @@ namespace BotsCore.Bots.BotsModel
             if (sendMessageInfo == default)
                 sendMessageInfo = new List<MessegeInfoOld[]>();
 
+            if (string.IsNullOrWhiteSpace(messageSend.Text))
+                SendRemainingTextAndButtons();
+
             if (messageSend.media != null && messageSend.media.Length > 1)
             {
                 // Отправка фото и видео
@@ -154,34 +157,37 @@ namespace BotsCore.Bots.BotsModel
 
                 void SendNonGroupMedia(IEnumerable<Media> media)
                 {
-                    foreach (var media_elem in media)
+                    if (media != null && media.Any())
                     {
-                        sendMessageInfo.Add(new MessegeInfoOld[]
+                        foreach (var media_elem in media)
                         {
+                            sendMessageInfo.Add(new MessegeInfoOld[]
+                            {
                             new MessegeInfoOld()
                             {
                                 Id = SendMedia(media_elem, null, GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang)),
                                 SetMessageButton = true,
                                 TypeMessage = true
                             }
-                        });
+                            });
+                        }
+                        messageSend.ButtonsKeyboard = default;
                     }
-                    messageSend.ButtonsKeyboard = default;
                 }
             }
-
             // Отправка клавиатуры если встроить в текст не получается
             if (messageSend.ButtonsKeyboard != default && messageSend.ButtonsMessage != default)
             {
                 if (
-                     messageSend.IsSaveInfoMessenge || ((messageSend.media != default && messageSend.media.Length == 1) ? messageSend.Text.Length <= LengthText_mediaMessage :
+                    /*messageSend.IsSaveInfoMessenge || */
+                    ((messageSend.media != default && messageSend.media.Length == 1) ? messageSend.Text.Length <= LengthText_mediaMessage :
                     (messageSend.Text.Length <= LengthText_textMessage))
                    )
                 {
                     BotClient.SendTextMessageAsync
                     (
                         chatId,
-                        ManagerPage.SettingManagerPage.GetTextSetButtons(messageSend.InBot.User.Lang),
+                        ManagerPage.SettingManagerPage.GetTextSetButtons(messageSend.InBot),
                         Telegram.Bot.Types.Enums.ParseMode.Markdown,
                         replyMarkup: GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang)
                     );
@@ -204,48 +210,46 @@ namespace BotsCore.Bots.BotsModel
                 SaveOldMessageInfo(sendMessageInfo, messageSend);
                 return sendMessageInfo.ToArray();
             }
-            else if (!string.IsNullOrWhiteSpace(messageSend.Text))
+            SendRemainingTextAndButtons();
+            SaveOldMessageInfo(sendMessageInfo, messageSend);
+            return sendMessageInfo.ToArray();
+            void SendRemainingTextAndButtons()
             {
-            resendMessage:
-                IReplyMarkup replyMarkup = null;
-                bool SetMessageButton = true;
-                if (messageSend.ButtonsKeyboard != default && messageSend.ButtonsMessage != default)
+                while (!string.IsNullOrWhiteSpace(messageSend.Text) || messageSend.ButtonsKeyboard != default || messageSend.ButtonsMessage != default)
                 {
-                    replyMarkup = GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang);
-                    messageSend.ButtonsKeyboard = null;
-                    SetMessageButton = false;
-                }
-                else if (messageSend.ButtonsMessage != default)
-                {
-                    replyMarkup = GetInlineKeyboard(messageSend.ButtonsMessage, messageSend.InBot.User.Lang);
-                    messageSend.ButtonsMessage = null;
-                }
-                else if (messageSend.ButtonsKeyboard != default)
-                {
-                    replyMarkup = GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang);
-                    messageSend.ButtonsKeyboard = null;
-                }
+                    IReplyMarkup replyMarkup = null;
+                    bool SetMessageButton = true;
+                    if (messageSend.ButtonsKeyboard != default && messageSend.ButtonsMessage != default)
+                    {
+                        replyMarkup = GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang);
+                        messageSend.ButtonsKeyboard = null;
+                        SetMessageButton = false;
+                    }
+                    else if (messageSend.ButtonsMessage != default)
+                    {
+                        replyMarkup = GetInlineKeyboard(messageSend.ButtonsMessage, messageSend.InBot.User.Lang);
+                        messageSend.ButtonsMessage = null;
+                    }
+                    else if (messageSend.ButtonsKeyboard != default)
+                    {
+                        replyMarkup = GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang);
+                        messageSend.ButtonsKeyboard = null;
+                    }
 
-                sendMessageInfo.Add(new MessegeInfoOld[] { new MessegeInfoOld()
+                    sendMessageInfo.Add(new MessegeInfoOld[] { new MessegeInfoOld()
                 {
                     SetMessageButton = SetMessageButton,
                     TypeMessage = false,
                     Id = BotClient.SendTextMessageAsync
                     (
                         chatId,
-                        GetLimitText(ref messageSend.Text, LengthText_textMessage),
+                        string.IsNullOrWhiteSpace(messageSend.Text) ? ManagerPage.SettingManagerPage.GetTextSetButtons(messageSend) : GetLimitText(ref messageSend.Text, LengthText_textMessage),
                         Telegram.Bot.Types.Enums.ParseMode.Markdown,
                         replyMarkup: replyMarkup
                     ).Result.MessageId
                 }});
-
-                if (!string.IsNullOrWhiteSpace(messageSend.Text))
-                    goto resendMessage;
-                SaveOldMessageInfo(sendMessageInfo, messageSend);
-                return sendMessageInfo.ToArray();
+                }
             }
-            SaveOldMessageInfo(sendMessageInfo, messageSend);
-            return sendMessageInfo.ToArray();
             void SendGroup(IEnumerable<Media> medias)
             {
                 uint count = 0;
