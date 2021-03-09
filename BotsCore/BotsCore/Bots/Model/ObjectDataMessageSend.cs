@@ -49,6 +49,7 @@ namespace BotsCore.Bots.Model
         public object MessageEditObject;
 
         public ObjectDataMessageSend(ObjectDataMessageInBot inBot) => this.InBot = inBot;
+        public static implicit operator ObjectDataMessageInBot(ObjectDataMessageSend v) => v.InBot;
 
         public class Media
         {
