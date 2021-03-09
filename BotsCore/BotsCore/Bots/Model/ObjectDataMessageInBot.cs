@@ -27,13 +27,14 @@ namespace BotsCore.Bots.Model
             BotHendler = ManagerBots.GetBot(BotID.BotKey);
         }
 
-        public void LoadInfo_User(Action<ObjectDataMessageInBot> action)
+        public bool LoadInfo_User(Action<ObjectDataMessageInBot> action)
         {
             var infoUser = ManagerUser.GetUser(BotID);
             if (infoUser != null)
             {
                 User = infoUser.Value.user;
                 BotUser = infoUser.Value.userBot;
+                return false;
             }
             else
             {
@@ -43,6 +44,7 @@ namespace BotsCore.Bots.Model
                 ManagerUser.AddUser(User);
                 if (action != null)
                     action.Invoke(this);
+                return true;
             }
         }
         public static implicit operator BotID(ObjectDataMessageInBot v) => v.BotID;
