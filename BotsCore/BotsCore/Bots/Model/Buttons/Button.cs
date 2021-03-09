@@ -16,6 +16,7 @@ namespace BotsCore.Bots.Model.Buttons
         public Text NameButton { get; init; }
         public Button(ModelMarkerTextData modelMarkerText, InvokeCommand command)
         {
+            NameButton = modelMarkerText.GetText();
             objectCommand = new ObjectCommand(command, (IGetCommandText)modelMarkerText);
         }
         public Button(string text, InvokeCommand command)
