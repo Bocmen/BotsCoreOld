@@ -64,7 +64,7 @@ namespace BotsCore
         {
             if (inBot.BotUser.Page.ObjectPage == default)
             {
-                (string NameApp, string NamePage) = SettingManagerPage.GetPageCreteUser();
+                (string NameApp, string NamePage) = SettingManagerPage.GetPageCreteUser(inBot);
                 inBot.BotUser.Page.ObjectPage = GetPage(NameApp, NamePage, inBot.BotHendler.GetBotTypes(), inBot.BotHendler.GetId());
                 return (Page)inBot.BotUser.Page.ObjectPage;
             }
@@ -137,7 +137,21 @@ namespace BotsCore
         /// </summary>
         public static void InMessageBot(ObjectDataMessageInBot inBot)
         {
-            inBot.LoadInfo_User(SettingManagerPage.GetRegisterMethod());
+            if (inBot.LoadInfo_User(SettingManagerPage.GetRegisterMethod(inBot)))
+            {
+                var (NameApp, NamePage) = SettingManagerPage.GetPageCreteUser(inBot);
+                SetPageSaveHistory(inBot, NameApp, NamePage);
+                string SendText = SettingManagerPage.GetTextCreteUser(inBot);
+                if (SettingManagerPage.SetStandartButtonsCreteUser(inBot))
+                {
+                    SendText ??= SettingManagerPage.GetTextSetButtons(inBot);
+                    SendDataBot(new ObjectDataMessageSend(inBot) { Text = SendText, ButtonsKeyboard = SettingManagerPage.GetStandartButtons(inBot), IsSaveInfoMessenge = false }, false);
+                }
+                else if(!string.IsNullOrWhiteSpace(SendText))
+                {
+                    SendDataBot(new ObjectDataMessageSend(inBot) { Text = SendText, IsSaveInfoMessenge = false }, false);
+                }
+            }
             if (AutoClearOldMessage && string.IsNullOrWhiteSpace(inBot.CallbackData))
                 SendDataBot(new ObjectDataMessageSend(inBot) { ClearOldMessage = true }, EventsClearOldMessageOnOff);
 
