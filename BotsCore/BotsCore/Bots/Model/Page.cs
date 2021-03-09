@@ -22,7 +22,8 @@ namespace BotsCore.Bots.Model
         /// <summary>
         /// Событие загрузки страницы из хранилища (как правило вызывается после перезагрузки бота)
         /// </summary>
-        public virtual void EventStoreLoad(ObjectDataMessageInBot inBot) { }
+        /// <param name="state">true - загрузка была успешной, false - произошла ошибка и данные были утеряны</param>
+        public virtual void EventStoreLoad(ObjectDataMessageInBot inBot, bool state) { }
         /// <summary>
         /// Событие перед закрытием страницы
         /// </summary>
@@ -32,7 +33,7 @@ namespace BotsCore.Bots.Model
         /// </summary>
         public virtual KitButton GetKeyboardButtons(ObjectDataMessageInBot inBot) => null;
         /// <summary>
-        /// Филтр отправки сторонних сообщений при открытой данной странице
+        /// Филтр отправки сообщений из другого Page при открытой данной странице
         /// </summary>
         /// <param name="messageSend">Отправляемое сообщение</param>
         public virtual ObjectDataMessageSend FilterAlienMessage(ObjectDataMessageSend messageSend) => messageSend;
@@ -40,7 +41,8 @@ namespace BotsCore.Bots.Model
         /// Фильтр отправки сообщений источник которых не известен
         /// </summary>
         /// <param name="messageSend">Отправляемые данные неизвестног источника</param>
-        public virtual ObjectDataMessageSend FilterUnknownSenderMessage(ObjectDataMessageSend messageSend) => messageSend;
+        /// <param name="infoSource">Путь к скрипту вызвавший метод отправки</param>
+        public virtual ObjectDataMessageSend FilterUnknownSenderMessage(ObjectDataMessageSend messageSend, string infoSource) => messageSend;
         /// <summary>
         /// Событие статуса отправки сообщения
         /// </summary>
@@ -50,7 +52,7 @@ namespace BotsCore.Bots.Model
         /// <summary>
         /// Фильтр отправляемых виджетов из других Page или неизвестных источников
         /// </summary>
-        public virtual ObjectDataMessageSend FilterSetWidget(ObjectDataMessageSend messageSend) => messageSend;
+        public virtual ObjectDataMessageSend FilterSetWidget(ObjectDataMessageSend messageSend, string infoSource) => messageSend;
         /// <summary>
         /// События что был отправлен виджет
         /// </summary>
@@ -70,16 +72,17 @@ namespace BotsCore.Bots.Model
         {
             return Task.Run(() =>
             {
-                (object sendInfo, bool statusSend) = ManagerPage.SendDataBot(messageSend, this);
+                (object sendInfo, bool statusSend) = ManagerPage.SendDataBot(messageSend, true, this);
                 EventStatusSendingMessage(messageSend, sendInfo, statusSend);
                 return (statusSend, sendInfo);
             });
         }
+        public string GetNamePage() => base.ToString();
         /// <summary>
         /// Логирование
         /// </summary>
         /// <param name="Text">Текст лога</param>
         /// <param name="botID">Иденификатор пользователя бота</param>
-        public static void Print(string Text, BotID botID, EchoLog.PrivilegeLog privilegeLog = EchoLog.PrivilegeLog.Info) => EchoLog.Print(Text, $"BotsCore.Bots.Model.Page->{botID}", privilegeLog);
+        public static void Print(string Text, BotID botID = null, EchoLog.PrivilegeLog privilegeLog = EchoLog.PrivilegeLog.Info) => EchoLog.Print(Text, $"BotsCore.Bots.Model.Page->{botID}", privilegeLog);
     }
 }
