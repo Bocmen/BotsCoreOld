@@ -7,12 +7,12 @@ namespace BotsCore.Moduls.GetSetting
 {
     public class StandartSettingObject : IObjectSetting
     {
-        public Dictionary<string, string> data { get; protected set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Data { get; protected set; } = new Dictionary<string, string>();
         public StandartSettingObject() { }
-        public StandartSettingObject(Dictionary<string, string> setData) => data = setData;
+        public StandartSettingObject(Dictionary<string, string> setData) => Data = setData;
         public void SetDataObjectSetting<T>(object e)
         {
-            foreach (var elemData in data)
+            foreach (var elemData in Data)
             {
                 try
                 {
@@ -46,6 +46,6 @@ namespace BotsCore.Moduls.GetSetting
             }
         }
 
-        public string GetValue(string key) => data[key];
+        public string GetValue(string key) => Data[key];
     }
 }

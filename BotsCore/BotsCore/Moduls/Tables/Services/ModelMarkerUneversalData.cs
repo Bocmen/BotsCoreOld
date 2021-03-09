@@ -12,7 +12,7 @@ namespace BotsCore.Moduls.Tables.Services
         public ModelMarkerUneversalData(string appName, string TableName, uint id) : base(appName, TableName, id) { }
         public ModelMarkerUneversalData(ITable table, uint id) : base(table, id) { }
         public T GetData() => (T)((ITableUniversal)propTable).GetDataId(id);
-        public ModelMarkerUneversalData<T> GetElemNewId(uint id) => new ModelMarkerUneversalData<T>(appName, tableName, id);
+        public ModelMarkerUneversalData<T> GetElemNewId(uint id) => new(appName, tableName, id);
         public static implicit operator T(ModelMarkerUneversalData<T> modelMarker) => modelMarker.GetData();
     }
 }

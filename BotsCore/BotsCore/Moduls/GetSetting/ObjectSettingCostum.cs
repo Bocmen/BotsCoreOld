@@ -14,7 +14,7 @@ namespace BotsCore.Moduls.GetSetting
             string textFile = clear.Replace(removeComment.Replace(File.ReadAllText(Patch), "\n"), ";\n");
             MatchCollection matches = searchFiled.Matches(textFile);
             foreach (Match match in matches)
-                data.Add(match.Groups[1].Value, match.Groups[2].Value);
+                Data.Add(match.Groups[1].Value, match.Groups[2].Value);
         }
     }
 }
