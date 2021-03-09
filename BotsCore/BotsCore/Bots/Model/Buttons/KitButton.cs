@@ -14,27 +14,32 @@ namespace BotsCore.Bots.Model.Buttons
             this.buttons = buttons;
             List<ObjectCommand> commands = new List<ObjectCommand>();
             foreach (var item in buttons)
-                commands.AddRange(item.Select(x=>x.objectCommand));
+                commands.AddRange(item.Select(x => x.objectCommand));
             commandList = new CommandList(commands.ToArray());
         }
 
-        public Button[][] GetButtons((byte x, byte y)[] diective)
+        public Button[][] GetButtons(params (byte x, byte y)[] diective)
         {
-            List<Button[]> resul = new List<Button[]>();
-            for (int y = 0; y < buttons.Length; y++)
+            if (diective != null)
             {
-                List<Button> resulStr = new List<Button>();
-                for (int x = 0; x < buttons[y].Length; x++)
+                List<Button[]> resul = new List<Button[]>();
+                for (int y = 0; y < buttons.Length; y++)
                 {
-                    if (diective.Where(N => N.x == x && N.y == y).Count() == 0)
+                    List<Button> resulStr = new List<Button>();
+                    for (int x = 0; x < buttons[y].Length; x++)
                     {
-                        resulStr.Add(buttons[y][x]);
+                        if (diective.Where(N => N.x == x && N.y == y).Count() == 0)
+                        {
+                            resulStr.Add(buttons[y][x]);
+                        }
                     }
+                    if (resulStr.Count > 0)
+                        resul.Add(resulStr.ToArray());
                 }
-                if (resulStr.Count > 0)
-                    resul.Add(resulStr.ToArray());
+                return resul.ToArray();
             }
-            return resul.ToArray();
+            else
+                return buttons;
         }
 
         public bool CommandInvoke(ObjectDataMessageInBot inBot, object dataEvent = null) => commandList.CommandInvoke(inBot, dataEvent);
