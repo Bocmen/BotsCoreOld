@@ -1,4 +1,5 @@
 ﻿using BotsCore.Bots.Interface;
+using BotsCore.Moduls.Translate;
 using BotsCore.User;
 using BotsCore.User.Models;
 using System;
@@ -47,5 +48,6 @@ namespace BotsCore.Bots.Model
         public static implicit operator BotID(ObjectDataMessageInBot v) => v.BotID;
         public static implicit operator ModelUser(ObjectDataMessageInBot v) => v.User;
         public static implicit operator ModelBotUser(ObjectDataMessageInBot v) => v.BotUser;
+        public static implicit operator Lang.LangTypes(ObjectDataMessageInBot v) => v.User.Lang;
     }
 }
