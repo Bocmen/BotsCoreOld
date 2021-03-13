@@ -17,7 +17,7 @@ namespace BotsCore.Bots.Model.Buttons.Command
                 var resulSearh = commands.FirstOrDefault(x => x.IsSame(inBotData));
                 if (resulSearh != default)
                 {
-                    resulSearh.invokeMethod?.Invoke(inBotData, dataEvent);
+                    resulSearh.InvokeMethod?.Invoke(inBotData, 1d, dataEvent);
                     return true;
                 }
                 else
