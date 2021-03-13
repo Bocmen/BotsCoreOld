@@ -62,41 +62,47 @@ namespace BotsCore
         /// </summary>
         public static Page GetPageUser(ObjectDataMessageInBot inBot)
         {
-            if (inBot.BotUser.Page.ObjectPage == default)
+            try
             {
-                (string NameApp, string NamePage) = SettingManagerPage.GetPageCreteUser(inBot);
-                inBot.BotUser.Page.ObjectPage = GetPage(NameApp, NamePage, inBot.BotHendler.GetBotTypes(), inBot.BotHendler.GetId());
-                return (Page)inBot.BotUser.Page.ObjectPage;
-            }
-            if (inBot.BotUser.Page.ObjectPage is Page page)
-            {
-                return page;
-            }
-            else
-            {
-                foreach (var elem in ListPage)
+                if (inBot.BotUser.Page.ObjectPage == default)
                 {
-                    if (elem.GetNameApp() == inBot.BotUser.Page.NameApp)
+                    inBot.BotUser.Page.ObjectPage = GetPage(inBot.BotUser.Page.NameApp, inBot.BotUser.Page.NamePage, inBot.BotHendler.GetBotTypes(), inBot.BotHendler.GetId());
+                    return (Page)inBot.BotUser.Page.ObjectPage;
+                }
+                if (inBot.BotUser.Page.ObjectPage is Page page)
+                {
+                    return page;
+                }
+                else
+                {
+                    foreach (var elem in ListPage)
                     {
-                        Page PageUser = null;
-                        bool state = false;
-                        try
+                        if (elem.GetNameApp() == inBot.BotUser.Page.NameApp)
                         {
-                            object objPage = JsonConvert.DeserializeObject(inBot.BotUser.Page.ObjectPage.ToString(), elem.GetTypePage(inBot.BotUser.Page.NamePage));
-                            if (objPage is Page pageDeserialize)
+                            Page PageUser = null;
+                            bool state = false;
+                            try
                             {
-                                PageUser = pageDeserialize;
-                                state = true;
+                                object objPage = JsonConvert.DeserializeObject(inBot.BotUser.Page.ObjectPage.ToString(), elem.GetTypePage(inBot.BotUser.Page.NamePage, inBot.BotHendler.GetBotTypes(), inBot.BotID.BotKey));
+                                if (objPage is Page pageDeserialize)
+                                {
+                                    PageUser = pageDeserialize;
+                                    state = true;
+                                }
                             }
+                            catch
+                            {
+                                PageUser = (Page)GetPage(inBot.BotUser.Page.NameApp, inBot.BotUser.Page.NamePage, inBot.BotHendler.GetBotTypes(), inBot.BotHendler.GetId());
+                            }
+                            try { PageUser.EventStoreLoad(inBot, state); } catch (Exception e) { EchoLog.Print($"Не удалось обработать метод загрузки данных страницы из бд, лог оишибки: {e.Message}"); }
+                            return PageUser;
                         }
-                        catch
-                        {
-                            PageUser = (Page)GetPage(inBot.BotUser.Page.NameApp, inBot.BotUser.Page.NamePage, inBot.BotHendler.GetBotTypes(), inBot.BotHendler.GetId());
-                        }
-                        try { PageUser.EventStoreLoad(inBot, state); } catch (Exception e) { EchoLog.Print($"Не удалось обработать метод загрузки данных страницы из бд, лог оишибки: {e.Message}"); }
-                        break;
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                EchoLog.Print($"Произошла ошибка в получении страницы: [{e.Message}]", EchoLog.PrivilegeLog.Warning);
             }
             return null;
         }
@@ -117,17 +123,18 @@ namespace BotsCore
         /// Устанивить страницу пользователю
         /// </summary>
         /// <param name="inBot">Входящие данные от бота</param>
-        /// <param name="NameApp">Название подраздела</param>
-        /// <param name="NamePage">Название страницы</param>
-        public static bool SetPage(ObjectDataMessageInBot inBot, string NameApp, string NamePage)
+        /// <param name="nameApp">Название подраздела</param>
+        /// <param name="namePage">Название страницы</param>
+        public static bool SetPage(ObjectDataMessageInBot inBot, string nameApp, string namePage, object sendDataNewPage = null)
         {
-            var pageO = GetPage(NameApp, NamePage, inBot.BotHendler.GetBotTypes(), inBot.BotHendler.GetId());
+            var pageO = GetPage(nameApp, namePage, inBot.BotHendler.GetBotTypes(), inBot.BotHendler.GetId());
             if (pageO != null && pageO is Page)
             {
-                if (inBot.BotUser.Page.ObjectPage is Page pageOpen)
+                Page pageOpen = inBot.BotUser.Page.ObjectPage as Page;
+                if (pageOpen != null)
                     pageOpen.EventClose(inBot);
-                inBot.BotUser.Page = new User.Models.ModelBotUser.DataPage() { NameApp = NameApp, NamePage = NamePage, ObjectPage = pageO };
-                ((Page)inBot.BotUser.Page.ObjectPage).EventOpen(inBot);
+                inBot.BotUser.Page = new User.Models.ModelBotUser.DataPage() { NameApp = nameApp, NamePage = namePage, ObjectPage = pageO };
+                ((Page)inBot.BotUser.Page.ObjectPage).EventOpen(inBot, pageOpen?.GetType(), sendDataNewPage);
                 return true;
             }
             return false;
@@ -137,20 +144,22 @@ namespace BotsCore
         /// </summary>
         public static void InMessageBot(ObjectDataMessageInBot inBot)
         {
+            while (SettingManagerPage == null) System.Threading.Thread.Sleep(2000);
             if (inBot.LoadInfo_User(SettingManagerPage.GetRegisterMethod(inBot)))
             {
-                var (NameApp, NamePage) = SettingManagerPage.GetPageCreteUser(inBot);
-                SetPageSaveHistory(inBot, NameApp, NamePage);
+                var (NameApp, NamePage, DataPage) = SettingManagerPage.GetPageCreteUser(inBot);
+                SetPageSaveHistory(inBot, NameApp, NamePage, DataPage);
                 string SendText = SettingManagerPage.GetTextCreteUser(inBot);
                 if (SettingManagerPage.SetStandartButtonsCreteUser(inBot))
                 {
                     SendText ??= SettingManagerPage.GetTextSetButtons(inBot);
                     SendDataBot(new ObjectDataMessageSend(inBot) { Text = SendText, ButtonsKeyboard = SettingManagerPage.GetStandartButtons(inBot), IsSaveInfoMessenge = false }, false);
                 }
-                else if(!string.IsNullOrWhiteSpace(SendText))
+                else if (!string.IsNullOrWhiteSpace(SendText))
                 {
                     SendDataBot(new ObjectDataMessageSend(inBot) { Text = SendText, IsSaveInfoMessenge = false }, false);
                 }
+                return;
             }
             if (AutoClearOldMessage && string.IsNullOrWhiteSpace(inBot.CallbackData))
                 SendDataBot(new ObjectDataMessageSend(inBot) { ClearOldMessage = true }, EventsClearOldMessageOnOff);
@@ -161,14 +170,14 @@ namespace BotsCore
         /// Установить страницу пользователю и сохранить в истории
         /// </summary>
         /// <param name="inBot">Входящие даннные от бота</param>
-        /// <param name="NameApp">Название подраздела</param>
-        /// <param name="NamePage">Название страницы</param>
+        /// <param name="nameApp">Название подраздела</param>
+        /// <param name="namePage">Название страницы</param>
         /// <returns>true- страница найдена и установлена, false - произошла ошибка при установке страницы</returns>
-        public static bool SetPageSaveHistory(ObjectDataMessageInBot inBot, string NameApp, string NamePage)
+        public static bool SetPageSaveHistory(ObjectDataMessageInBot inBot, string nameApp, string namePage, object sendDataNewPage = null)
         {
-            if (SetPage(inBot, NameApp, NamePage))
+            if (SetPage(inBot, nameApp, namePage, sendDataNewPage))
             {
-                AddHistryPageNonCheckManagerPage(inBot, NameApp, NamePage);
+                AddHistryPageNonCheckManagerPage(inBot, nameApp, namePage);
                 return true;
             }
             return false;
@@ -234,13 +243,12 @@ namespace BotsCore
                 object messageSendInfo;
                 Page pageSetUser = GetPageUser(messageSend.InBot);
                 messageSend.InBot.BotUser.SetAppData(NameAppStore, (NameIsWidgetStore, messageSend.Widget));
-                IBot botSend = messageSend.InBot.BotHendler != default ? messageSend.InBot.BotHendler : ManagerBots.GetBot(messageSend.InBot.BotID.BotKey);
                 if (eventOnOff)
                 {
                     string infoSource = sendPage != null ? sendPage.GetNamePage() : new System.Diagnostics.StackTrace().GetFrame(1).GetMethod().DeclaringType.FullName.ToString();
                     if (messageSend.Widget)
                     {
-                        messageSendInfo = botSend.SendDataBot(sendPage == pageSetUser ? messageSend : pageSetUser.FilterSetWidget(messageSend, infoSource));
+                        messageSendInfo = messageSend.InBot.BotHendler.SendDataBot(sendPage == pageSetUser ? messageSend : pageSetUser.FilterSetWidget(messageSend, infoSource));
                         pageSetUser.EventSetWidget(messageSend, sendPage, messageSendInfo);
                     }
                     else
@@ -248,16 +256,16 @@ namespace BotsCore
                         if (sendPage != null)
                         {
                             if (pageSetUser != sendPage)
-                                messageSendInfo = botSend.SendDataBot(pageSetUser.FilterAlienMessage(messageSend));
+                                messageSendInfo = messageSend.InBot.BotHendler.SendDataBot(pageSetUser.FilterAlienMessage(messageSend));
                             else
-                                messageSendInfo = botSend.SendDataBot(messageSend);
+                                messageSendInfo = messageSend.InBot.BotHendler.SendDataBot(messageSend);
                         }
                         else
-                            messageSendInfo = botSend.SendDataBot(pageSetUser.FilterUnknownSenderMessage(messageSend, infoSource));
+                            messageSendInfo = messageSend.InBot.BotHendler.SendDataBot(pageSetUser.FilterUnknownSenderMessage(messageSend, infoSource));
                     }
                 }
                 else
-                    messageSendInfo = botSend.SendDataBot(messageSend);
+                    messageSendInfo = messageSend.InBot.BotHendler.SendDataBot(messageSend);
 
                 messageSend.InBot.User.LoadToDataBD();
                 return (messageSendInfo, true);
