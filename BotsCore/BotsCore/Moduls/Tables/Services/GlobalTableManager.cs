@@ -5,7 +5,7 @@ namespace BotsCore.Moduls.Tables.Services
 {
     public static class GlobalTableManager
     {
-        private static Dictionary<string, Dictionary<string, ITable>> globalTables = new Dictionary<string, Dictionary<string, ITable>>();
+        private static readonly Dictionary<string, Dictionary<string, ITable>> globalTables = new();
 
         /// <summary>
         /// Загрузить таблицы сервиса
