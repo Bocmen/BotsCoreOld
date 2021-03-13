@@ -22,7 +22,7 @@ namespace BotsCore.Bots.Interface
         /// <summary>
         /// Первая страница после создание пользователя
         /// </summary>
-        public (string NameApp, string NamePage) GetPageCreteUser(ObjectDataMessageInBot inBot);
+        public (string NameApp, string NamePage, object SendDataPage) GetPageCreteUser(ObjectDataMessageInBot inBot);
         /// <summary>
         /// Стандартный текст при выдаче кнопок (если текст не был указан
         /// </summary>
