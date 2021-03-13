@@ -38,7 +38,6 @@ namespace BotsCore.Moduls
                             break;
                     }
                     Console.WriteLine($"[{Path}] [{DateTime.Now.ToLocalTime()} {privilege}] {TextLog}");
-                    Console.ResetColor();
                 }
                 catch { }
             }
