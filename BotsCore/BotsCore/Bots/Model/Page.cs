@@ -1,6 +1,7 @@
 ﻿using BotsCore.Bots.Model.Buttons;
 using BotsCore.Moduls;
 using BotsCore.User.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace BotsCore.Bots.Model
@@ -18,7 +19,7 @@ namespace BotsCore.Bots.Model
         /// <summary>
         /// Событие установки страницы пользователю (первое открытие)
         /// </summary>
-        public virtual void EventOpen(ObjectDataMessageInBot inBot) { }
+        public virtual void EventOpen(ObjectDataMessageInBot inBot, Type oldPage, object dataOpenPage) { }
         /// <summary>
         /// Событие загрузки страницы из хранилища (как правило вызывается после перезагрузки бота)
         /// </summary>
@@ -61,6 +62,10 @@ namespace BotsCore.Bots.Model
         /// Событие о том что виджет был закрыт
         /// </summary>
         public virtual void EventClosedWidget(ObjectDataMessageInBot inBot) { }
+        /// <summary>
+        /// Если метод GetKeyboardButtons возвращает null, выдавать ли стандартную клавиатуру
+        /// </summary>
+        public virtual bool IsSendStandartButtons(ObjectDataMessageInBot inBot) => true;
 
 
         /// <summary>
