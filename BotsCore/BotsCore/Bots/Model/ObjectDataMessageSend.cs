@@ -1,4 +1,5 @@
 ﻿using BotsCore.Bots.Model.Buttons;
+using BotsCore.Moduls.Translate;
 
 namespace BotsCore.Bots.Model
 {
@@ -15,7 +16,23 @@ namespace BotsCore.Bots.Model
         private bool? editOldMessage = null;
 
         public bool ClearOldMessage;
-        public string Text;
+        private string textString;
+        public Text TextObj { set; private get; }
+        public string Text
+        {
+            get
+            {
+                if (TextObj != null)
+                    return TextObj.GetText(InBot);
+                else
+                    return textString;
+            }
+            set
+            {
+                textString = value;
+                TextObj = null;
+            }
+        }
         public Media[] media;
         public bool IsEditOldMessage
         {
