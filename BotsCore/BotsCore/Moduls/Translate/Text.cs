@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using BotsCore.Bots.Model.Buttons.Command.Interface;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +10,10 @@ namespace BotsCore.Moduls.Translate
     /// <summary>
     /// Обьект мультиязычного текста
     /// </summary>
-    public class Text
+    public class Text : IGetCommandText
     {
         [JsonProperty]
-        private List<(Lang.LangTypes lang, string text)> Data = new List<(Lang.LangTypes lang, string text)>();
+        private readonly List<(Lang.LangTypes lang, string text)> Data = new();
 
         /// <summary>
         /// Инцилизация при известном одном языке
@@ -89,13 +90,13 @@ namespace BotsCore.Moduls.Translate
             }
             else
             {
-                StringBuilder stringBuilder = new StringBuilder();
+                StringBuilder stringBuilder = new();
                 foreach (var line in linesTranslate)
                     stringBuilder.AppendLine(line.Data[0].text);
                 restErrorTranslatr: string TranslatedText = Translator.Translete(stringBuilder.ToString(), lang, linesTranslate[0].Data[0].lang);
                 if (TranslatedText == null) goto restErrorTranslatr;
                 string[] TranslatedLinesText = TranslatedText.Split('\n');
-                List<string> arrayDataAllLines = new List<string>();
+                List<string> arrayDataAllLines = new();
                 int[] CountLines = linesTranslate.Select(x => x.Data[0].text.Split('\n').Length).ToArray();
                 int CountChar = 0;
                 foreach (var count in CountLines)
