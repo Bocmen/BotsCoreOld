@@ -12,7 +12,20 @@ namespace BotsCore.Bots.Model
         public string MessageText { get; init; }
         public string CallbackData { get; init; }
         public object DataMessenge { get; init; }
-        public IBot BotHendler { get; init; }
+        private IBot botHendler;
+        public IBot BotHendler
+        {
+            get
+            {
+                if (botHendler == null)
+                    botHendler = ManagerBots.GetBot(BotID.BotKey);
+                return botHendler;
+            }
+            set
+            {
+                botHendler = value;
+            }
+        }
         public BotID BotID { get; init; }
         public ModelUser User { get; private set; }
         public ModelBotUser BotUser { get; private set; }
