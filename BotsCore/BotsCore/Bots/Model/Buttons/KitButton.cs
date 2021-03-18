@@ -17,8 +17,9 @@ namespace BotsCore.Bots.Model.Buttons
                 commands.AddRange(item.Select(x => x.ObjectCommand));
             commandList = new CommandList(commands.ToArray());
         }
-        public Button[][] GetButtons(params (byte x, byte y)[] diective)
+        public Button[][] GetButtons(params (byte x, byte y)?[] diective)
         {
+            diective = diective?.Where(x => x != null).ToArray();
             if (diective != null)
             {
                 List<Button[]> resul = new();
@@ -27,7 +28,7 @@ namespace BotsCore.Bots.Model.Buttons
                     List<Button> resulStr = new();
                     for (int x = 0; x < buttons[y].Length; x++)
                     {
-                        if (!diective.Where(N => N.x == x && N.y == y).Any())
+                        if (!diective.Where(N => N.Value.x == x && N.Value.y == y).Any())
                         {
                             resulStr.Add(buttons[y][x]);
                         }
@@ -40,7 +41,7 @@ namespace BotsCore.Bots.Model.Buttons
             else
                 return buttons;
         }
-        public static implicit operator Button[][](KitButton kitButton) => kitButton.buttons;
+        public static implicit operator Button[][](KitButton kitButton) => kitButton?.buttons;
         public bool CommandInvoke(ObjectDataMessageInBot inBot, object dataEvent = null) => commandList.CommandInvoke(inBot, dataEvent);
     }
 }

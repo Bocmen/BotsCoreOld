@@ -18,6 +18,7 @@ namespace BotsCore.User
 
         public static void Start(IObjectSetting setting)
         {
+          //  File.Delete(Path.GetFullPath(setting.GetValue("patchTableUsersInfo")));
             PatchTableUsersInfo = setting.GetValue("patchTableUsersInfo");
             BdConnectionUsersInfo = string.Format(setting.GetValue("bdConnectionUsersInfo"), PatchTableUsersInfo);
             if (Directory.Exists(PatchTableUsersInfo))
@@ -79,6 +80,13 @@ namespace BotsCore.User
         public static void AllEditUsers(Func<ModelUser, ModelUser> editFunction)
         {
             lock (users) { users = users.Select(x => editFunction.Invoke(x)).ToList(); }
+        }
+        public static ModelUser SearchUser(Func<ModelUser, bool> searchFunction)
+        {
+            foreach (var user in users)
+                if (searchFunction.Invoke(user))
+                    return user;
+            return null;
         }
     }
 }

@@ -1,22 +1,72 @@
 ﻿using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
-using System.Linq;
 
 namespace BotsCore.Moduls.Translate
 {
     /// <summary>
     /// Модуль перевода текста
     /// </summary>
-    public static class Translator
+    public class Translator : TranslateCore
     {
-        /// <summary>
-        /// Перевод текста
-        /// </summary>
-        /// <param name="langTo">Язык на который текст будет переведён</param>
-        /// <param name="lang">Исходный язык (необязательный параметр)</param>
-        public static string Translete(string txt, Lang.LangTypes langTo, Lang.LangTypes? lang = null)
+        private static Lang.LangTypes[] langs = new Lang.LangTypes[]
+        {
+                    Lang.LangTypes.ru,
+                    Lang.LangTypes.en,
+                    Lang.LangTypes.es,
+                    Lang.LangTypes.he,
+                    Lang.LangTypes.it,
+                    Lang.LangTypes.nl,
+                    Lang.LangTypes.ja,
+                    Lang.LangTypes.ar,
+                    Lang.LangTypes.zh,
+                    Lang.LangTypes.de,
+                    Lang.LangTypes.pl,
+                    Lang.LangTypes.pt,
+                    Lang.LangTypes.ro,
+                    Lang.LangTypes.tr
+        };
+        public override uint MaxCharText => 800;
+        public override Lang.LangTypes[] Langs => langs;
+
+        private static string GetNameLang(Lang.LangTypes lang)
+        {
+            switch (lang)
+            {
+                case Lang.LangTypes.ru:
+                    return "rus";
+                case Lang.LangTypes.fr:
+                    return "fra";
+                case Lang.LangTypes.es:
+                    return "spa";
+                case Lang.LangTypes.he:
+                    return "heb";
+                case Lang.LangTypes.it:
+                    return "ita";
+                case Lang.LangTypes.nl:
+                    return "dut";
+                case Lang.LangTypes.ja:
+                    return "jap";
+                case Lang.LangTypes.en:
+                    return "eng";
+                case Lang.LangTypes.ar:
+                    return "ara";
+                case Lang.LangTypes.zh:
+                    return "chi";
+                case Lang.LangTypes.de:
+                    return "ger";
+                case Lang.LangTypes.pl:
+                    return "pol";
+                case Lang.LangTypes.pt:
+                    return "por";
+                case Lang.LangTypes.ro:
+                    return "rum";
+                case Lang.LangTypes.tr:
+                    return "tur";
+            }
+            return "rus";
+        }
+        public override string Translate(string txt, Lang.LangTypes langTo, Lang.LangTypes? lang = null)
         {
             if (string.IsNullOrWhiteSpace(txt))
                 return txt;
@@ -24,10 +74,9 @@ namespace BotsCore.Moduls.Translate
             {
                 try
                 {
-                    string responseText = client.PostAsync("https://translate.alibaba.com/translationopenseviceapp/trans/TranslateTextAddAlignment.do", new StringContent($"srcLanguage={(lang == null ? "ru" : lang.ToString())}&srcText={txt}&tgtLanguage={langTo}&viewType=&source=&bizType=message", Encoding.UTF8, "application/x-www-form-urlencoded")).Result.Content.ReadAsStringAsync().Result;
-                    if (string.IsNullOrWhiteSpace(responseText)) return responseText;
-                    return string.Join("\n", ((Newtonsoft.Json.Linq.JArray)JsonConvert.DeserializeObject<dynamic>(responseText).listTargetText).Select(x => (string)x));
-
+                    string s = $"{{\"input\":{JsonConvert.SerializeObject(txt)},\"from\":\"{GetNameLang((Lang.LangTypes)lang)}\",\"to\":\"{GetNameLang(langTo)}\",\"format\":\"text\",\"options\":{{\"origin\":\"reversodesktop\",\"sentenceSplitter\":false,\"contextResults\":false,\"languageDetection\":true}}}}";
+                    string responseText = client.PostAsync("https://api.reverso.net/translate/v1/translation", new StringContent(s, Encoding.UTF8, "application/json")).Result.Content.ReadAsStringAsync().Result;
+                    return ((Newtonsoft.Json.Linq.JObject)JsonConvert.DeserializeObject(responseText)).GetValue("translation").ToObject<Newtonsoft.Json.Linq.JArray>()[0].ToString();
                 }
                 catch { return null; }
             }

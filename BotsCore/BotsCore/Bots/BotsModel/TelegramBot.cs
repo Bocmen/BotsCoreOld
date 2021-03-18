@@ -25,6 +25,7 @@ namespace BotsCore.Bots.BotsModel
         public readonly Telegram.Bot.Types.User botInfo;
         private readonly string NameAppStore;
         private const string LastMessageInfo = "LastMessageInfo";
+        private const string LastKeyboardInfo = "LastKeyboardInfo";
         // ======================================================================================== Clear Data
         private readonly Text Text_ClearMessage = new(Lang.LangTypes.ru, "Сообщение очищено");
         private readonly Media ClearMediaData = new("http://cdn.onlinewebfonts.com/svg/img_431947.png", MediaType.Photo);
@@ -65,6 +66,24 @@ namespace BotsCore.Bots.BotsModel
         {
             Chat chatId = messageSend.InBot.DataMessenge != null ? ((Message)messageSend.InBot.DataMessenge).Chat : new Chat() { Id = (long)messageSend.InBot.BotID.Id };
             MessegeInfoOld[][] messengeOldInfo = GetOldMessage(messageSend);
+
+            if (messageSend.ClearButtonsKeyboard)
+            {
+                object info = messageSend.InBot.BotUser.GetAppData<object>(NameAppStore, LastKeyboardInfo);
+                if (info != null && info is MessegeInfoOld infoOldKeyboard)
+                {
+                    int idMessage = BotClient.SendTextMessageAsync(chatId, ".", replyMarkup: new ReplyKeyboardMarkup(new KeyboardButton(".")) { ResizeKeyboard = true }).Result.MessageId;
+                    BotClient.DeleteMessageAsync(chatId, idMessage);
+                }
+            }
+
+            if (messageSend.ClearButtonsMessage)
+                if (messengeOldInfo != null)
+                    foreach (var group in messengeOldInfo)
+                        if (group != null)
+                            foreach (var item in group)
+                                BotClient.EditMessageReplyMarkupAsync(chatId, item.Id, null);
+
             if (messageSend.ClearOldMessage)
             {
                 ClearMessage(messengeOldInfo, messageSend, chatId);
@@ -337,10 +356,22 @@ namespace BotsCore.Bots.BotsModel
             }
             return null;
         }
-        private void SaveOldMessageInfo(IEnumerable<IEnumerable<MessegeInfoOld>> messegeInfoOlds, ObjectDataMessageSend messageSend)
+        private void SaveOldMessageInfo(IEnumerable<IEnumerable<MessegeInfoOld>> MessegeInfoOld, ObjectDataMessageSend messageSend)
         {
-            if (messageSend.IsSaveInfoMessenge)
-                messageSend.InBot.BotUser.SetAppData(NameAppStore, (LastMessageInfo, messageSend.IsSaveInfoMessenge ? JsonConvert.SerializeObject(messegeInfoOlds) : null));
+            messageSend.InBot.BotUser.SetAppData(NameAppStore, (LastMessageInfo, (messageSend.IsSaveInfoMessenge && MessegeInfoOld != null) ? JsonConvert.SerializeObject(MessegeInfoOld) : null));
+            if (MessegeInfoOld != null)
+            {
+                foreach (var group in MessegeInfoOld)
+                {
+                    foreach (var item in group)
+                    {
+                        if (!item.EditOldMessege)
+                        {
+                            messageSend.InBot.BotUser.SetAppData(NameAppStore, (LastKeyboardInfo, item));
+                        }
+                    }
+                }
+            }
         }
         private static InputMediaBase GetInputMediaBase(Media media, string Comment = null, Telegram.Bot.Types.Enums.ParseMode parseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown)
         {
@@ -378,12 +409,23 @@ namespace BotsCore.Bots.BotsModel
                 {
                     if (messege.EditOldMessege)
                     {
-                        if (messege.TypeMessage)
+                        try
                         {
-                            BotClient.EditMessageMediaAsync(chat, messege.Id, GetInputMediaBase(ClearMediaData));
+                            BotClient.DeleteMessageAsync(chat, messege.Id);
                         }
-                        else
-                            BotClient.EditMessageTextAsync(chat, messege.Id, textClear);
+                        catch
+                        {
+                            try
+                            {
+                                if (messege.TypeMessage)
+                                {
+                                    BotClient.EditMessageMediaAsync(chat, messege.Id, GetInputMediaBase(ClearMediaData));
+                                }
+                                else
+                                    BotClient.EditMessageTextAsync(chat, messege.Id, textClear);
+                            }
+                            catch { }
+                        }
                     }
                 }
             }
@@ -452,6 +494,7 @@ namespace BotsCore.Bots.BotsModel
             messageSend.Text = null;
             return resul;
         }
+
         public struct MessegeInfoOld
         {
             /// <summary>

@@ -35,5 +35,9 @@ namespace BotsCore.Bots.Interface
         /// Получения метода обрабатывающего регистрацию пользователя
         /// </summary>
         public Action<ObjectDataMessageInBot> GetRegisterMethod(ObjectDataMessageInBot inBot);
+        /// <summary>
+        /// Какую страницу открыть если в истории страниц больше нет данных
+        /// </summary>
+        public (string NameApp, string NamePage, object SendDataPage) GetPageNonHistoryPage(ObjectDataMessageInBot inBot);
     }
 }

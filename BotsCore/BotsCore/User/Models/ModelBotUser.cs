@@ -11,11 +11,23 @@ namespace BotsCore.User.Models
         /// </summary>
         public BotID BotID { get; protected set; }
         public DataPage Page;
-        public LinkedList<(string NameApp, string NamePage)> HistoryPage = new();
+        public LinkedList<(string NameApp, string NamePage, object dataInPage)> HistoryPage = new();
         /// <summary>
         /// Данные микросервисов
         /// </summary>
         public readonly Dictionary<string, Dictionary<string, object>> appData = new();
+
+        public object this[string nameApp, string namePage]
+        {
+            get
+            {
+                return GetAppData<object>(nameApp, namePage);
+            }
+            set
+            {
+                SetAppData(nameApp, (namePage, value));
+            }
+        }
 
         public ModelBotUser(BotID botID, DataPage Page)
         {
@@ -53,7 +65,6 @@ namespace BotsCore.User.Models
                     appDictonary.Add(KeyData, SetData);
             }
         }
-
         public struct DataPage
         {
             public string NameApp;

@@ -12,6 +12,8 @@ namespace BotsCore.Moduls.Translate
     /// </summary>
     public class Text : IGetCommandText
     {
+        [NonSerialized]
+        public static TranslateCore translateCore = new Translator();
         [JsonProperty]
         private readonly List<(Lang.LangTypes lang, string text)> Data = new();
 
@@ -40,7 +42,7 @@ namespace BotsCore.Moduls.Translate
             var resul = Data.FirstOrDefault(x => x.lang == lang);
             if (resul != default)
                 return resul.text;
-            rest: var New = (lang, Translator.Translete(Data[0].text, lang, Data[0].lang));
+            rest: var New = (lang, translateCore.Translate(Data[0].text, lang, Data[0].lang));
             if (New.Item2 == null) goto rest;
             if (Data.FirstOrDefault(x => x.lang == lang) == default)
                 Data.Add(New);
@@ -83,17 +85,14 @@ namespace BotsCore.Moduls.Translate
         }
         private static void MultiTransleteOneLang(Lang.LangTypes lang, List<Text> linesTranslate)
         {
-            if (linesTranslate.Sum(x => x.Data[0].text.Length) >= 4500)
+            if (linesTranslate.Sum(x => x.Data[0].text.Length) >= translateCore.MaxCharText)
             {
                 MultiTransleteOneLang(lang, linesTranslate.Take(linesTranslate.Count / 2).ToList());
                 MultiTransleteOneLang(lang, linesTranslate.Take(linesTranslate.Count - (linesTranslate.Count / 2)).ToList());
             }
             else
             {
-                StringBuilder stringBuilder = new();
-                foreach (var line in linesTranslate)
-                    stringBuilder.AppendLine(line.Data[0].text);
-                restErrorTranslatr: string TranslatedText = Translator.Translete(stringBuilder.ToString(), lang, linesTranslate[0].Data[0].lang);
+                restErrorTranslatr: string TranslatedText = translateCore.Translate(string.Join("\n", linesTranslate.Select(x=>x.Data[0].text)), lang, linesTranslate[0].Data[0].lang);
                 if (TranslatedText == null) goto restErrorTranslatr;
                 string[] TranslatedLinesText = TranslatedText.Split('\n');
                 List<string> arrayDataAllLines = new();

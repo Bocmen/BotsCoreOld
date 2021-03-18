@@ -5,7 +5,8 @@ using Newtonsoft.Json;
 using System;
 using BotsCore.Moduls;
 using BotsCore.User;
-using BotsCore.Bots;
+using BotsCore.Bots.Model.Buttons.Command;
+using BotsCore.Bots.Model.Buttons;
 
 namespace BotsCore
 {
@@ -164,6 +165,8 @@ namespace BotsCore
             if (AutoClearOldMessage && string.IsNullOrWhiteSpace(inBot.CallbackData))
                 SendDataBot(new ObjectDataMessageSend(inBot) { ClearOldMessage = true }, EventsClearOldMessageOnOff);
 
+            try { CommandList commandList = SettingManagerPage.GetSpecialCommand(inBot); if (commandList != null && commandList.CommandInvoke(inBot)) return; } catch (Exception e) { EchoLog.Print($"Не удалось обработать стандартную команду: {e.Message}"); return; }
+
             try { GetPageUser(inBot).EventInMessage(inBot); inBot.User.LoadToDataBD(); } catch (Exception e) { EchoLog.Print($"Не удалось обработать сообщение, лог ошибки: {e.Message}"); }
         }
         /// <summary>
@@ -177,7 +180,7 @@ namespace BotsCore
         {
             if (SetPage(inBot, nameApp, namePage, sendDataNewPage))
             {
-                AddHistryPageNonCheckManagerPage(inBot, nameApp, namePage);
+                AddHistryPageNonCheckManagerPage(inBot, nameApp, namePage, sendDataNewPage);
                 return true;
             }
             return false;
@@ -189,11 +192,11 @@ namespace BotsCore
         /// <param name="appName">Название подраздела</param>
         /// <param name="namePage">Название страницы</param>
         /// <returns>true- страница найдена и записана в историю, false - произошла ошибка</returns>
-        public static bool AddHistoryPage(ObjectDataMessageInBot inBot, string appName, string namePage)
+        public static bool AddHistoryPage(ObjectDataMessageInBot inBot, string appName, string namePage, object dataInPage = null)
         {
             if (GetPage(appName, namePage, inBot.BotHendler.GetBotTypes(), inBot.BotHendler.GetId()) != null)
             {
-                AddHistryPageNonCheckManagerPage(inBot, appName, namePage);
+                AddHistryPageNonCheckManagerPage(inBot, appName, namePage, dataInPage);
                 return true;
             }
             return false;
@@ -203,7 +206,7 @@ namespace BotsCore
         /// </summary>
         /// <param name="inBot">Входящие даннные от бота</param>
         /// <returns>true - успех, false -  в истории больше не осталось страниц</returns>
-        public static bool SetBackPage(ObjectDataMessageInBot inBot)
+        public static bool SetBackPage(ObjectDataMessageInBot inBot, object sendDataPage = null)
         {
             if (inBot.BotUser.GetAppData<bool>(NameAppStore, NameIsWidgetStore))
             {
@@ -213,22 +216,34 @@ namespace BotsCore
             }
             else
             {
-                inBot.BotUser.HistoryPage.RemoveLast();
-                if (inBot.BotUser.HistoryPage.Count > 1)
-                {
-                    var pageSetInfo = inBot.BotUser.HistoryPage.Last;
+                (string NameApp, string NamePage, object dataInPage) dataOpenPage = default;
+
+                if (inBot.BotUser.HistoryPage.Count != 0)
                     inBot.BotUser.HistoryPage.RemoveLast();
-                    SetPageSaveHistory(inBot, pageSetInfo.Value.NameApp, pageSetInfo.Value.NamePage);
-                    return true;
+
+                if (inBot.BotUser.HistoryPage.Count != 0)
+                {
+                    dataOpenPage = inBot.BotUser.HistoryPage.Last.Value;
                 }
-                return false;
+                else
+                {
+                    dataOpenPage = SettingManagerPage.GetPageNonHistoryPage(inBot);
+                    if (dataOpenPage == default)
+                        return false;
+                }
+                SetPageSaveHistory(inBot, dataOpenPage.NameApp, dataOpenPage.NamePage, (sendDataPage == null ? dataOpenPage.dataInPage : sendDataPage));
+                return true;
             }
         }
-        private static void AddHistryPageNonCheckManagerPage(ObjectDataMessageInBot inBot, string appName, string namePage)
+        /// <summary>
+        /// Удаление всей истории открытых страниц
+        /// </summary>
+        public static void ClearHistoryPage(ObjectDataMessageInBot inBot) => inBot.BotUser.HistoryPage.Clear();
+        private static void AddHistryPageNonCheckManagerPage(ObjectDataMessageInBot inBot, string appName, string namePage, object dataInPage = null)
         {
             if (inBot.BotUser.HistoryPage.Count >= 5)
                 inBot.BotUser.HistoryPage.RemoveFirst();
-            inBot.BotUser.HistoryPage.AddLast((appName, namePage));
+            inBot.BotUser.HistoryPage.AddLast((appName, namePage, dataInPage));
         }
         /// <summary>
         /// Отправка данных пользователю бота
@@ -256,7 +271,7 @@ namespace BotsCore
                         if (sendPage != null)
                         {
                             if (pageSetUser != sendPage)
-                                messageSendInfo = messageSend.InBot.BotHendler.SendDataBot(pageSetUser.FilterAlienMessage(messageSend));
+                                messageSendInfo = messageSend.InBot.BotHendler.SendDataBot(pageSetUser.FilterAlienMessage(messageSend, sendPage));
                             else
                                 messageSendInfo = messageSend.InBot.BotHendler.SendDataBot(messageSend);
                         }
@@ -276,5 +291,21 @@ namespace BotsCore
             }
             return (null, false);
         }
+        /// <summary>
+        /// Повторная отправка клавиатуры пользователю
+        /// </summary>
+        public static void ResetSendKeyboard(ObjectDataMessageInBot inBot)
+        {
+            Page openPage = GetPageUser(inBot);
+            Button[][] kitButton = openPage.GetKeyboardButtons(inBot);
+            if (kitButton == null && openPage.IsSendStandartButtons(inBot))
+                kitButton = SettingManagerPage.GetStandartButtons(inBot);
+            if (kitButton != null)
+                SendDataBot(new ObjectDataMessageSend(inBot) { ButtonsKeyboard = kitButton }, false);
+        }
+        /// <summary>
+        /// Повторная отправка последнего сообщения
+        /// </summary>
+        public static void ResetSendLastMessage(ObjectDataMessageInBot inBot) => GetPageUser(inBot).ResetLastMessenge(inBot);
     }
 }

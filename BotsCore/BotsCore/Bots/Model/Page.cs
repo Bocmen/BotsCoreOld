@@ -37,7 +37,7 @@ namespace BotsCore.Bots.Model
         /// Филтр отправки сообщений из другого Page при открытой данной странице
         /// </summary>
         /// <param name="messageSend">Отправляемое сообщение</param>
-        public virtual ObjectDataMessageSend FilterAlienMessage(ObjectDataMessageSend messageSend) => messageSend;
+        public virtual ObjectDataMessageSend FilterAlienMessage(ObjectDataMessageSend messageSend, Page sendingPage) => messageSend;
         /// <summary>
         /// Фильтр отправки сообщений источник которых не известен
         /// </summary>

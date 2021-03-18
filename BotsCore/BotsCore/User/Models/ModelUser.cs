@@ -10,6 +10,7 @@ namespace BotsCore.User.Models
 {
     public partial class ModelUser
     {
+        private bool IsDelite = false;
         private long? IdTable;
 
         /// <summary>
@@ -35,7 +36,23 @@ namespace BotsCore.User.Models
         /// Данные о акк ботов
         /// </summary>
         public List<ModelBotUser> BotsAccount { get; private set; } = new List<ModelBotUser>();
-        public ModelRegisterId ModelRegisterId;
+        public Dictionary<string, object> DopInfoUser = new();
+        public string Login;
+        public string Password;
+        public object this[string key]
+        {
+            get
+            {
+                if (DopInfoUser.TryGetValue(key, out object resul))
+                    return resul;
+                else
+                    return null;
+            }
+            set
+            {
+                DopInfoUser.TryAdd(key, value);
+            }
+        }
 
         /// <summary>
         /// Удаление акк. бота
@@ -75,21 +92,23 @@ namespace BotsCore.User.Models
             if (GetModelBotUser(botUser.BotID) == null)
                 BotsAccount.Add(botUser);
         }
-
         public void LoadToDataBD()
         {
-            if (!File.Exists(ManagerUser.PatchTableUsersInfo))
-                SQLiteConnection.CreateFile(ManagerUser.PatchTableUsersInfo);
-            using SQLiteConnection connection = new(ManagerUser.BdConnectionUsersInfo);
-            connection.Open();
-            if (IdTable == null)
+            if (!IsDelite)
             {
-                new SQLiteCommand($"INSERT INTO 'Users' ('Data') VALUES('{JsonConvert.SerializeObject(this)}');", connection).ExecuteNonQuery();
-                IdTable = connection.LastInsertRowId;
+                if (!File.Exists(ManagerUser.PatchTableUsersInfo))
+                    SQLiteConnection.CreateFile(ManagerUser.PatchTableUsersInfo);
+                using SQLiteConnection connection = new(ManagerUser.BdConnectionUsersInfo);
+                connection.Open();
+                if (IdTable == null)
+                {
+                    new SQLiteCommand($"INSERT INTO 'Users' ('Data') VALUES('{JsonConvert.SerializeObject(this)}');", connection).ExecuteNonQuery();
+                    IdTable = connection.LastInsertRowId;
+                }
+                else
+                    new SQLiteCommand($"UPDATE 'Users' SET Data = '{JsonConvert.SerializeObject(this)}'  WHERE Id = '{IdTable}'", connection).ExecuteNonQuery();
+                connection.CloseAsync();
             }
-            else
-                new SQLiteCommand($"UPDATE 'Users' SET Data = '{JsonConvert.SerializeObject(this)}'  WHERE Id = '{IdTable}'", connection).ExecuteNonQuery();
-            connection.CloseAsync();
         }
         public void DeliteUserDataBD()
         {
@@ -99,6 +118,7 @@ namespace BotsCore.User.Models
                 connection.Open();
                 new SQLiteCommand($"DELETE FROM 'Users' WHERE Id = '{IdTable}';", connection).ExecuteNonQuery();
                 connection.CloseAsync();
+                IsDelite = true;
             }
         }
 

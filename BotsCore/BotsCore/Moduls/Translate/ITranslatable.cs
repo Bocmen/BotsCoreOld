@@ -6,7 +6,7 @@ namespace BotsCore.Moduls.Translate
     /// <summary>
     /// Наделяет обьект свойством перевода
     /// </summary>
-    public interface ITranslate
+    public interface ITranslatable
     {
         /// <summary>
         /// Получение всех строк необходимых к переводу у обьекта

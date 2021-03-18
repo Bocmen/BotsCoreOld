@@ -15,9 +15,22 @@ namespace BotsCore.Bots.Model
         private bool? saveInfoMessenge;
         private bool? editOldMessage = null;
 
-        public bool ClearOldMessage;
         private string textString;
+
+        /// <summary>
+        /// Стереть старые сообщения (не совместим со всеми остальными параметрами)
+        /// </summary>
+        public bool ClearOldMessage;
+        public bool ClearButtonsMessage;
+        public bool ClearButtonsKeyboard;
+
+        /// <summary>
+        /// Отправляемый текст типа Text
+        /// </summary>
         public Text TextObj { set; private get; }
+        /// <summary>
+        /// Отправляемый текст типа sting
+        /// </summary>
         public string Text
         {
             get
@@ -33,7 +46,13 @@ namespace BotsCore.Bots.Model
                 TextObj = null;
             }
         }
+        /// <summary>
+        /// Медиавложения к сообщению
+        /// </summary>
         public Media[] media;
+        /// <summary>
+        /// редактировать ли предыдущие значения
+        /// </summary>
         public bool IsEditOldMessage
         {
             get
@@ -47,9 +66,21 @@ namespace BotsCore.Bots.Model
                 editOldMessage = value;
             }
         }
+        /// <summary>
+        /// Является ли сообщение виджетом
+        /// </summary>
         public bool Widget;
+        /// <summary>
+        /// Кнопки внутри сообщения
+        /// </summary>
         public Button[][] ButtonsMessage;
+        /// <summary>
+        /// Клавиатура бота
+        /// </summary>
         public Button[][] ButtonsKeyboard;
+        /// <summary>
+        /// Сохранить ли данные о текущем сообщении для их дальнейшего редактирования
+        /// </summary>
         public bool IsSaveInfoMessenge
         {
             get
@@ -63,6 +94,9 @@ namespace BotsCore.Bots.Model
                 saveInfoMessenge = value;
             }
         }
+        /// <summary>
+        /// Обьект старых сообщений для их возможного редактирования (IsEditOldMessage в таком случае ни на что не влияет)
+        /// </summary>
         public object MessageEditObject;
 
         public ObjectDataMessageSend(ObjectDataMessageInBot inBot) => InBot = inBot;
