@@ -241,6 +241,15 @@ namespace BotsCore
         /// </summary>
         public static void ClearHistoryPage(ObjectDataMessageInBot inBot) => inBot.BotUser.HistoryPage.Clear();
         /// <summary>
+        /// Удаление N последних страниц из истории
+        /// </summary>
+        /// <param name="countPageDelite">кол-во удаляемых страниц</param>
+        public static void ClearHistoryListPage(ObjectDataMessageInBot inBot, uint countPageDelite)
+        {
+            for (uint i = 0; i < countPageDelite && inBot.BotUser.HistoryPage?.Count > 0; i++)
+                inBot.BotUser.HistoryPage.RemoveLast();
+        }
+        /// <summary>
         /// Добавление страницы в историю без проверки существует ли такая страница
         /// </summary>
         private static void AddHistryPageNonCheckManagerPage(ObjectDataMessageInBot inBot, string appName, string namePage, object dataInPage = null)
