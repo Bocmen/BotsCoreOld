@@ -4,6 +4,7 @@ using BotsCore.Moduls.Translate;
 using System.Collections.Generic;
 using static BotsCore.Moduls.Translate.Lang;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace BotsCore.Moduls.Tables.ModelTables
 {
@@ -23,7 +24,7 @@ namespace BotsCore.Moduls.Tables.ModelTables
         public Text GetDataTextId(uint id) => dataTable[id];
         public void Update(ModelContainerDataTable[] dataUpdate)
         {
-            var LoadData = dataUpdate.Select(x => (x.IdElemTable, Text.LoadJSON(x.Data))).ToList();
+            var LoadData = dataUpdate.Select(x => (x.IdElemTable, JsonConvert.DeserializeObject<Text>(x.Data))).ToList();
             if (langsStandart != null && langsStandart.Length > 0)
             {
                 List<Text> textsTranslate = LoadData.Select(x => x.Item2).ToList();

@@ -14,6 +14,7 @@ namespace BotsCore
     {
         private const string NameAppStore = "CoreData";
         private const string NameIsWidgetStore = "IsWidget";
+        public static uint CountHistoryLength = 5;
 
         /// <summary>
         /// Удалять ли старые сообщения когда приходит новое текстовое сообщение
@@ -231,7 +232,7 @@ namespace BotsCore
                     if (dataOpenPage == default)
                         return false;
                 }
-                SetPageSaveHistory(inBot, dataOpenPage.NameApp, dataOpenPage.NamePage, (sendDataPage == null ? dataOpenPage.dataInPage : sendDataPage));
+                SetPage(inBot, dataOpenPage.NameApp, dataOpenPage.NamePage, (sendDataPage == null ? dataOpenPage.dataInPage : sendDataPage));
                 return true;
             }
         }
@@ -239,9 +240,12 @@ namespace BotsCore
         /// Удаление всей истории открытых страниц
         /// </summary>
         public static void ClearHistoryPage(ObjectDataMessageInBot inBot) => inBot.BotUser.HistoryPage.Clear();
+        /// <summary>
+        /// Добавление страницы в историю без проверки существует ли такая страница
+        /// </summary>
         private static void AddHistryPageNonCheckManagerPage(ObjectDataMessageInBot inBot, string appName, string namePage, object dataInPage = null)
         {
-            if (inBot.BotUser.HistoryPage.Count >= 5)
+            if (inBot.BotUser.HistoryPage.Count >= CountHistoryLength)
                 inBot.BotUser.HistoryPage.RemoveFirst();
             inBot.BotUser.HistoryPage.AddLast((appName, namePage, dataInPage));
         }

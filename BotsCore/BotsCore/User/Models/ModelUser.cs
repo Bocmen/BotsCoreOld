@@ -50,7 +50,18 @@ namespace BotsCore.User.Models
             }
             set
             {
-                DopInfoUser.TryAdd(key, value);
+                if (value != null)
+                {
+                    if (DopInfoUser.ContainsKey(key))
+                        DopInfoUser[key] = value;
+                    else
+                        DopInfoUser.Add(key, value);
+                }
+                else
+                {
+                    if (DopInfoUser.ContainsKey(key))
+                        DopInfoUser.Remove(key);
+                }
             }
         }
 

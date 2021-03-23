@@ -14,28 +14,34 @@ namespace BotsCore.Bots.Model.Buttons.Command
         {
             if (commands.FirstOrDefault(x => !(x is string || x is IGetCommandText)) != default)
                 throw new Exception("Не все команды подходят для работы с данным элементов");
-            Commands = commands.Select(x => { if (x is string str) { return FilterText(str); } else { return x; } }).ToArray();
+            Commands = commands; // commands.Select(x => { if (x is string str) { return FilterText(str); } else { return x; } }).ToArray();
             InvokeMethod = method;
         }
         public bool IsSame(ObjectDataMessageInBot messageInBot)
         {
             string textCommand = messageInBot.CallbackData ?? messageInBot.MessageText;
-            textCommand = textCommand != null ? FilterText(textCommand) : null;
+            textCommand = textCommand != null ? FilterText(textCommand, messageInBot) : null;
             foreach (var elemCommand in Commands)
             {
                 if (elemCommand is string lineCommand)
                 {
-                    if (lineCommand == textCommand)
+                    if (FilterText(lineCommand, messageInBot) == textCommand)
                         return true;
                 }
                 else if (elemCommand is IGetCommandText IGetCommand)
                 {
-                    if (textCommand == FilterText(IGetCommand.GetText(messageInBot.User.Lang)))
+                    if (textCommand == FilterText(IGetCommand.GetText(messageInBot.User.Lang), messageInBot))
                         return true;
                 }
             }
             return false;
         }
-        private static string FilterText(string text) => string.Join(" ", text.Split(' ').Where(x => !string.IsNullOrWhiteSpace(x))).ToLower();
+        private static string FilterText(string text, ObjectDataMessageInBot inBot) => FilterButtonText(string.Join(" ", text.Split(' ').Where(x => !string.IsNullOrWhiteSpace(x))).ToLower(), inBot.BotHendler.GetMaxLengthButtonText());
+        public static string FilterButtonText(string text, uint maxSize)
+        {
+            if (text.Length > maxSize)
+                text = $"{new string(text.Take((int)(maxSize - 4)).ToArray())} ...";
+            return text;
+        }
     }
 }

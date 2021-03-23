@@ -7,6 +7,7 @@ namespace BotsCore.Bots.Interface
         public BotTypes GetBotTypes();
         public string GetId();
         public object SendDataBot(ObjectDataMessageSend messageSend);
+        public uint GetMaxLengthButtonText();
         public enum BotTypes
         {
             VK,

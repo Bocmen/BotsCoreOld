@@ -14,6 +14,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using BotsCore.Bots.Model.Buttons;
 using static BotsCore.Bots.Model.ObjectDataMessageSend;
 using Telegram.Bot.Types.InputFiles;
+using BotsCore.Bots.Model.Buttons.Command;
 
 namespace BotsCore.Bots.BotsModel
 {
@@ -21,6 +22,7 @@ namespace BotsCore.Bots.BotsModel
     {
         private const uint LengthText_mediaMessage = 1024;
         private const uint LengthText_textMessage = 4096;
+        private const uint LengthText_Buttons = 32;
         public TelegramBotClient BotClient { get; init; }
         public readonly Telegram.Bot.Types.User botInfo;
         private readonly string NameAppStore;
@@ -445,7 +447,7 @@ namespace BotsCore.Bots.BotsModel
                 //    return (KeyboardButton)resul;
                 return new KeyboardButton()
                 {
-                    Text = button.NameButtonObj.GetText(lang)
+                    Text = ObjectCommand.FilterButtonText(button.NameButtonObj.GetText(lang), LengthText_Buttons)
                 };
             }
             return new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true };
@@ -463,11 +465,12 @@ namespace BotsCore.Bots.BotsModel
                 //object resul = button.ButtonBot?.FirstOrDefault(x => x.typeBot == IBot.BotTypes.Telegram);
                 //if (resul != default)
                 //    return (InlineKeyboardButton)resul;
+                string text = ObjectCommand.FilterButtonText(button.NameButtonObj.GetText(lang), LengthText_Buttons);
                 return new InlineKeyboardButton()
                 {
-                    Text = button.NameButtonObj.GetText(lang),
+                    Text = text,
                     Url = button.Url,
-                    CallbackData = button.NameButtonObj.GetText(lang)
+                    CallbackData = text
                 };
             }
             return new InlineKeyboardMarkup(buttons);
@@ -494,6 +497,7 @@ namespace BotsCore.Bots.BotsModel
             messageSend.Text = null;
             return resul;
         }
+        public uint GetMaxLengthButtonText() => LengthText_Buttons;
 
         public struct MessegeInfoOld
         {

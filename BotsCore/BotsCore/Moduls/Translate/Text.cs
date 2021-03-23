@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace BotsCore.Moduls.Translate
@@ -27,10 +28,11 @@ namespace BotsCore.Moduls.Translate
         /// <summary>
         /// Инцилизация при известных нескольких языках
         /// </summary>
-        public Text((Lang.LangTypes lang, string text)[] DataSet)
+        [JsonConstructor]
+        public Text((Lang.LangTypes lang, string text)[] Data)
         {
-            if (DataSet != null && DataSet.Length >= 1)
-                Data.AddRange(DataSet);
+            if (Data != null && Data.Length >= 1)
+                this.Data.AddRange(Data);
             else
                 throw new ArgumentNullException();
         }
@@ -58,28 +60,28 @@ namespace BotsCore.Moduls.Translate
         public (Lang.LangTypes lang, string text)[] GetAllData() => Data.ToArray();
 
         public override string ToString() => $"{string.Join(",", Data.Select(x => x.lang))} text={Data[0].text}";
+        public string GetDefaultText() => Data[0].text;
 
-        /// <summary>
-        /// Загрузка обьекта из json
-        /// </summary>
-        public static Text LoadJSON(string Json)
+        public static bool operator ==(Text t1, Text t2) => t1?.GetDefaultText() == t2?.GetDefaultText();
+        public static bool operator !=(Text t1, Text t2) => !(t1 == t2);
+        public static bool operator ==(Text t1, object t2) 
         {
-            try
-            {
-                dynamic data = JsonConvert.DeserializeObject(Json);
-                var r = ((Newtonsoft.Json.Linq.JArray)data.Data).Select(x => x.ToObject<(Lang.LangTypes lang, string text)>()).ToArray();
-                return new Text(r);
-            }
-            catch { throw new Model.Exception("Неудалось десериализовать JSON обьекта Text"); }
+            if (t2 is Text T2)
+                return t1 == T2;
+            return false;
         }
+        public static bool operator !=(Text t1, object t2) => !(t1 == t2);
+
+
         //=========================================================================================
         /// <summary>
         /// Множественный перевод нескольких обьектов (по скорости быстрее чем отдельный перевод)
         /// </summary>
         /// <param name="lang">На какой язык необходимо перевести</param>
-        public static void MultiTranslate(Lang.LangTypes lang, List<Text> linesTranslate)
+        public static void MultiTranslate(Lang.LangTypes lang, IEnumerable<Text> linesTranslate)
         {
-            var LangLines = linesTranslate.Where(x => x != null && x.Data.FirstOrDefault(l => l.lang == lang) == default).GroupBy(x => x.Data[0].lang);
+            var LangLines = linesTranslate?.Where(x => x != null && x.Data.FirstOrDefault(l => l.lang == lang) == default)?.GroupBy(x => x.Data[0].lang);
+            if (!LangLines.Any()) return;
             foreach (var oneLang in LangLines)
                 MultiTransleteOneLang(lang, oneLang.ToList());
         }
@@ -92,7 +94,7 @@ namespace BotsCore.Moduls.Translate
             }
             else
             {
-                restErrorTranslatr: string TranslatedText = translateCore.Translate(string.Join("\n", linesTranslate.Select(x=>x.Data[0].text)), lang, linesTranslate[0].Data[0].lang);
+            restErrorTranslatr: string TranslatedText = translateCore.Translate(string.Join("\n", linesTranslate.Select(x => x.Data[0].text)), lang, linesTranslate[0].Data[0].lang);
                 if (TranslatedText == null) goto restErrorTranslatr;
                 string[] TranslatedLinesText = TranslatedText.Split('\n');
                 List<string> arrayDataAllLines = new();
@@ -110,5 +112,14 @@ namespace BotsCore.Moduls.Translate
                 }
             }
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Text text)
+                return text == this;
+            return false;
+        }
+
+        public override int GetHashCode() => GetDefaultText().GetHashCode();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BotsCore.Bots.Model.Buttons.Command;
+using BotsCore.Moduls.Translate;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -43,5 +44,11 @@ namespace BotsCore.Bots.Model.Buttons
         }
         public static implicit operator Button[][](KitButton kitButton) => kitButton?.buttons;
         public bool CommandInvoke(ObjectDataMessageInBot inBot, object dataEvent = null) => commandList.CommandInvoke(inBot, dataEvent);
+
+        public delegate void MethodString(ObjectDataMessageInBot inBotData, string text, object data = null);
+        public delegate void MethodText(ObjectDataMessageInBot inBotData, Text text, object data = null);
+
+        public static KitButton GenerateKitButtonsTexts(string[][] data, MethodString methodText, double similarity) => new KitButton(data?.Select(x => x?.Select(y => new Button(y, (inBotData, degreeSimilarity, data) => { if (degreeSimilarity >= similarity) { methodText.Invoke(inBotData, y, data); return true; } return false; })).ToArray()).ToArray());
+        public static KitButton GenerateKitButtonsTexts(Text[][] data, MethodText methodText, double similarity) => new KitButton(data?.Select(x => x?.Select(y => new Button(y, (inBotData, degreeSimilarity, data) => { if (degreeSimilarity >= similarity) { methodText.Invoke(inBotData, y, data); return true; } return false; })).ToArray()).ToArray());
     }
 }

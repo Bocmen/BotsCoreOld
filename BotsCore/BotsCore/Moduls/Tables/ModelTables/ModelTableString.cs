@@ -1,5 +1,6 @@
 ﻿using BotsCore.Moduls.Tables.Interface;
 using BotsCore.Moduls.Tables.Services.Model;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,7 +22,7 @@ namespace BotsCore.Moduls.Tables.ModelTables
         {
             var newData = new Dictionary<uint, string>();
             foreach (var elem in dataUpdate)
-                newData.Add(elem.IdElemTable, elem.Data);
+                newData.Add(elem.IdElemTable, System.Text.RegularExpressions.Regex.Unescape(elem.Data));
             dataTable = newData;
             if (updateDataEvents != null)
                 updateDataEvents.Invoke();
