@@ -26,7 +26,7 @@ namespace BotsCore.Moduls.Translate
                     Lang.LangTypes.ro,
                     Lang.LangTypes.tr
         };
-        public override uint MaxCharText => 800;
+        public override uint MaxCharText => 600;
         public override Lang.LangTypes[] Langs => langs;
 
         private static string GetNameLang(Lang.LangTypes lang)

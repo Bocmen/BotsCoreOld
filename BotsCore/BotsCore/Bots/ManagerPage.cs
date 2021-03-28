@@ -14,7 +14,7 @@ namespace BotsCore
     {
         private const string NameAppStore = "CoreData";
         private const string NameIsWidgetStore = "IsWidget";
-        public static uint CountHistoryLength = 5;
+        public static uint CountHistoryLength = 10;
 
         /// <summary>
         /// Удалять ли старые сообщения когда приходит новое текстовое сообщение
@@ -68,7 +68,7 @@ namespace BotsCore
             {
                 if (inBot.BotUser.Page.ObjectPage == default)
                 {
-                    inBot.BotUser.Page.ObjectPage = GetPage(inBot.BotUser.Page.NameApp, inBot.BotUser.Page.NamePage, inBot.BotHendler.GetBotTypes(), inBot.BotHendler.GetId());
+                    inBot.BotUser.Page.ObjectPage = GetPage(inBot.BotUser.Page.NameApp, inBot.BotUser.Page.NamePage, inBot);
                     return (Page)inBot.BotUser.Page.ObjectPage;
                 }
                 if (inBot.BotUser.Page.ObjectPage is Page page)
@@ -85,7 +85,7 @@ namespace BotsCore
                             bool state = false;
                             try
                             {
-                                object objPage = JsonConvert.DeserializeObject(inBot.BotUser.Page.ObjectPage.ToString(), elem.GetTypePage(inBot.BotUser.Page.NamePage, inBot.BotHendler.GetBotTypes(), inBot.BotID.BotKey));
+                                object objPage = JsonConvert.DeserializeObject(inBot.BotUser.Page.ObjectPage.ToString(), elem.GetTypePage(inBot.BotUser.Page.NamePage, inBot));
                                 if (objPage is Page pageDeserialize)
                                 {
                                     PageUser = pageDeserialize;
@@ -94,7 +94,7 @@ namespace BotsCore
                             }
                             catch
                             {
-                                PageUser = (Page)GetPage(inBot.BotUser.Page.NameApp, inBot.BotUser.Page.NamePage, inBot.BotHendler.GetBotTypes(), inBot.BotHendler.GetId());
+                                PageUser = (Page)GetPage(inBot.BotUser.Page.NameApp, inBot.BotUser.Page.NamePage, inBot);
                             }
                             try { PageUser.EventStoreLoad(inBot, state); } catch (Exception e) { EchoLog.Print($"Не удалось обработать метод загрузки данных страницы из бд, лог оишибки: {e.Message}"); }
                             return PageUser;
@@ -114,11 +114,11 @@ namespace BotsCore
         /// <param name="appName">Название подраздела</param>
         /// <param name="namePage">Название страницы</param>
         /// <returns></returns>
-        private static object GetPage(string appName, string namePage, IBot.BotTypes? botType = null, string keyBot = null)
+        private static object GetPage(string appName, string namePage, ObjectDataMessageInBot inBot)
         {
             foreach (var item in ListPage)
                 if (item.GetNameApp() == appName)
-                    return item.GetPage(namePage, botType, keyBot);
+                    return item.GetPage(namePage, inBot);
             return null;
         }
         /// <summary>
@@ -129,7 +129,7 @@ namespace BotsCore
         /// <param name="namePage">Название страницы</param>
         public static bool SetPage(ObjectDataMessageInBot inBot, string nameApp, string namePage, object sendDataNewPage = null)
         {
-            var pageO = GetPage(nameApp, namePage, inBot.BotHendler.GetBotTypes(), inBot.BotHendler.GetId());
+            var pageO = GetPage(nameApp, namePage, inBot);
             if (pageO != null && pageO is Page)
             {
                 Page pageOpen = inBot.BotUser.Page.ObjectPage as Page;
@@ -195,7 +195,7 @@ namespace BotsCore
         /// <returns>true- страница найдена и записана в историю, false - произошла ошибка</returns>
         public static bool AddHistoryPage(ObjectDataMessageInBot inBot, string appName, string namePage, object dataInPage = null)
         {
-            if (GetPage(appName, namePage, inBot.BotHendler.GetBotTypes(), inBot.BotHendler.GetId()) != null)
+            if (GetPage(appName, namePage, inBot) != null)
             {
                 AddHistryPageNonCheckManagerPage(inBot, appName, namePage, dataInPage);
                 return true;

@@ -12,16 +12,16 @@ namespace BotsCore.Moduls.Translate
         /// Получение всех строк необходимых к переводу у обьекта
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<Text> GetTextsTranslate();
+        public List<Text> GetTextsTranslate();
         /// <summary>
         /// Перевод данных обьекта
         /// </summary>
-        public void Translate(params LangTypes[] langs)
+        public virtual void Translate(params LangTypes[] langs)
         {
             var lines = GetTextsTranslate();
-            foreach (var lang in langs)
-                foreach (var elem in lines)
-                    elem.GetText(lang);
+            if (langs != null)
+                foreach (var lang in langs)
+                    Text.MultiTranslate(lang, lines);
         }
     }
 }

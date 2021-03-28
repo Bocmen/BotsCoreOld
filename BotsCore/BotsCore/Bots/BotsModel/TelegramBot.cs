@@ -108,7 +108,7 @@ namespace BotsCore.Bots.BotsModel
                             (lastMessageInfo.TypeMessage == (messageSend.media != null && messageSend.media.Length >= 1)) &&
                             ((messageSend.ButtonsKeyboard == default && messageSend.ButtonsMessage == default) ||
                             (messageSend.ButtonsKeyboard == default && messageSend.ButtonsMessage != default) ||
-                            (messageSend.Text.Length > ((lastMessageInfo.TypeMessage ? LengthText_mediaMessage : LengthText_textMessage) + (messageSend.ButtonsMessage != default ? 0 : LengthText_textMessage)))
+                            ((messageSend.Text?.Length ?? 0) > ((lastMessageInfo.TypeMessage ? LengthText_mediaMessage : LengthText_textMessage) + (messageSend.ButtonsMessage != default ? 0 : LengthText_textMessage)))
                             )
                            )
                         {
@@ -447,7 +447,7 @@ namespace BotsCore.Bots.BotsModel
                 //    return (KeyboardButton)resul;
                 return new KeyboardButton()
                 {
-                    Text = ObjectCommand.FilterButtonText(button.NameButtonObj.GetText(lang), LengthText_Buttons)
+                    Text = ObjectCommand.FilterButtonText(button.GetNameButton(lang), LengthText_Buttons)
                 };
             }
             return new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true };
@@ -465,7 +465,7 @@ namespace BotsCore.Bots.BotsModel
                 //object resul = button.ButtonBot?.FirstOrDefault(x => x.typeBot == IBot.BotTypes.Telegram);
                 //if (resul != default)
                 //    return (InlineKeyboardButton)resul;
-                string text = ObjectCommand.FilterButtonText(button.NameButtonObj.GetText(lang), LengthText_Buttons);
+                string text = ObjectCommand.FilterButtonText(button.GetNameButton(lang), LengthText_Buttons);
                 return new InlineKeyboardButton()
                 {
                     Text = text,

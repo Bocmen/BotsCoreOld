@@ -17,6 +17,8 @@ namespace BotsCore.Moduls.Translate
         public static TranslateCore translateCore = new Translator();
         [JsonProperty]
         private readonly List<(Lang.LangTypes lang, string text)> Data = new();
+        [JsonProperty]
+        public bool LockTranslator = false;
 
         /// <summary>
         /// Инцилизация при известном одном языке
@@ -44,6 +46,8 @@ namespace BotsCore.Moduls.Translate
             var resul = Data.FirstOrDefault(x => x.lang == lang);
             if (resul != default)
                 return resul.text;
+            if (LockTranslator)
+                return Data.First().text;
             rest: var New = (lang, translateCore.Translate(Data[0].text, lang, Data[0].lang));
             if (New.Item2 == null) goto rest;
             if (Data.FirstOrDefault(x => x.lang == lang) == default)
@@ -64,7 +68,7 @@ namespace BotsCore.Moduls.Translate
 
         public static bool operator ==(Text t1, Text t2) => t1?.GetDefaultText() == t2?.GetDefaultText();
         public static bool operator !=(Text t1, Text t2) => !(t1 == t2);
-        public static bool operator ==(Text t1, object t2) 
+        public static bool operator ==(Text t1, object t2)
         {
             if (t2 is Text T2)
                 return t1 == T2;
@@ -80,7 +84,7 @@ namespace BotsCore.Moduls.Translate
         /// <param name="lang">На какой язык необходимо перевести</param>
         public static void MultiTranslate(Lang.LangTypes lang, IEnumerable<Text> linesTranslate)
         {
-            var LangLines = linesTranslate?.Where(x => x != null && x.Data.FirstOrDefault(l => l.lang == lang) == default)?.GroupBy(x => x.Data[0].lang);
+            var LangLines = linesTranslate?.Where(x => x != null && (!x.LockTranslator) && x.Data.FirstOrDefault(l => l.lang == lang) == default)?.GroupBy(x => x.Data[0].lang);
             if (!LangLines.Any()) return;
             foreach (var oneLang in LangLines)
                 MultiTransleteOneLang(lang, oneLang.ToList());
@@ -90,7 +94,7 @@ namespace BotsCore.Moduls.Translate
             if (linesTranslate.Sum(x => x.Data[0].text.Length) >= translateCore.MaxCharText)
             {
                 MultiTransleteOneLang(lang, linesTranslate.Take(linesTranslate.Count / 2).ToList());
-                MultiTransleteOneLang(lang, linesTranslate.Take(linesTranslate.Count - (linesTranslate.Count / 2)).ToList());
+                MultiTransleteOneLang(lang, linesTranslate.Skip(linesTranslate.Count / 2).ToList());
             }
             else
             {

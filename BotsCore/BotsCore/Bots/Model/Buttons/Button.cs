@@ -30,7 +30,7 @@ namespace BotsCore.Bots.Model.Buttons
         /// <param name="command">Команда которую нужно исполнить</param>
         public Button(string text, InvokeCommand command)
         {
-            NameButtonObj = new Text(Lang.LangTypes.ru, text);
+            NameButton = text;
             ObjectCommand = new ObjectCommand(command, text);
         }
         /// <summary>
@@ -62,23 +62,25 @@ namespace BotsCore.Bots.Model.Buttons
         /// </summary>
         /// <param name="nameButton">Обьект с названием кнопки</param>
         /// <param name="command">Команда которую нужно исполнить</param>
-        public Button(Text nameButton, ObjectCommand command)
+        public Button(Text nameButton, ObjectCommand Ocommand)
         {
             NameButtonObj = nameButton;
-            ObjectCommand = command;
+            ObjectCommand = Ocommand;
         }
         /// <summary>
         /// Создание кнопки уже с готовым набором команд
         /// </summary>
         /// <param name="nameButton">Строка с названием кнопки</param>
         /// <param name="command">Команда которую нужно исполнить</param>
-        public Button(string nameButton, ObjectCommand command)
+        public Button(string nameButton, ObjectCommand Ocommand)
         {
             NameButton = nameButton;
-            ObjectCommand = command;
+            ObjectCommand = Ocommand;
         }
 
         private Button() { }
+
+        public string GetNameButton(Lang.LangTypes lang) => NameButton ?? NameButtonObj.GetText(lang);
 
         /// <summary>
         /// Создание кнопки (callback) с открытием ссылки
