@@ -15,19 +15,22 @@ using BotsCore.Bots.Model.Buttons;
 using static BotsCore.Bots.Model.ObjectDataMessageSend;
 using Telegram.Bot.Types.InputFiles;
 using BotsCore.Bots.Model.Buttons.Command;
+using System.Text.RegularExpressions;
 
 namespace BotsCore.Bots.BotsModel
 {
     public class TelegramBot : IBot
     {
-        private const uint LengthText_mediaMessage = 1024;
-        private const uint LengthText_textMessage = 4096;
-        private const uint LengthText_Buttons = 32;
+        private const int LengthText_mediaMessage = 1024;
+        private const int LengthText_textMessage = 4096;
+        private const int LengthText_Buttons = 32;
         public TelegramBotClient BotClient { get; init; }
         public readonly Telegram.Bot.Types.User botInfo;
         private readonly string NameAppStore;
         private const string LastMessageInfo = "LastMessageInfo";
         private const string LastKeyboardInfo = "LastKeyboardInfo";
+        private static readonly Regex regexUrl = new(@"\[.*\]\(.*\)", RegexOptions.Compiled);
+        private static readonly Regex regexUrlLength = new(@"\[(.*)\]\(.*\)", RegexOptions.Compiled);
         // ======================================================================================== Clear Data
         private readonly Text Text_ClearMessage = new(Lang.LangTypes.ru, "Сообщение очищено");
         private readonly Media ClearMediaData = new("http://cdn.onlinewebfonts.com/svg/img_431947.png", MediaType.Photo);
@@ -108,7 +111,7 @@ namespace BotsCore.Bots.BotsModel
                             (lastMessageInfo.TypeMessage == (messageSend.media != null && messageSend.media.Length >= 1)) &&
                             ((messageSend.ButtonsKeyboard == default && messageSend.ButtonsMessage == default) ||
                             (messageSend.ButtonsKeyboard == default && messageSend.ButtonsMessage != default) ||
-                            ((messageSend.Text?.Length ?? 0) > ((lastMessageInfo.TypeMessage ? LengthText_mediaMessage : LengthText_textMessage) + (messageSend.ButtonsMessage != default ? 0 : LengthText_textMessage)))
+                            (GetLengthText(messageSend.Text) > ((lastMessageInfo.TypeMessage ? LengthText_mediaMessage : LengthText_textMessage) + (messageSend.ButtonsMessage != default ? 0 : LengthText_textMessage)))
                             )
                            )
                         {
@@ -132,7 +135,7 @@ namespace BotsCore.Bots.BotsModel
 
                             InlineKeyboardMarkup IsGetMessegeButtonsSend(uint textLimit)
                             {
-                                if (lastMessageInfo.EditOldMessege && (messageSend.Text.Length <= textLimit))
+                                if (lastMessageInfo.EditOldMessege && (GetLengthText(messageSend.Text) <= textLimit))
                                 {
                                     InlineKeyboardMarkup resul = GetInlineKeyboard(messageSend.ButtonsMessage, messageSend.InBot.User.Lang);
                                     messageSend.ButtonsMessage = default;
@@ -201,8 +204,8 @@ namespace BotsCore.Bots.BotsModel
             {
                 if (
                     /*messageSend.IsSaveInfoMessenge || */
-                    ((messageSend.media != default && messageSend.media.Length == 1) ? messageSend.Text.Length <= LengthText_mediaMessage :
-                    (messageSend.Text.Length <= LengthText_textMessage))
+                    ((messageSend.media != default && messageSend.media.Length == 1) ? GetLengthText(messageSend.Text) <= LengthText_mediaMessage :
+                    (GetLengthText(messageSend.Text) <= LengthText_textMessage))
                    )
                 {
                     BotClient.SendTextMessageAsync
@@ -219,7 +222,7 @@ namespace BotsCore.Bots.BotsModel
             if (messageSend.media != default && messageSend.media.Length == 1)
             {
                 IReplyMarkup replyMarkup = (messageSend.ButtonsKeyboard == default ?
-                    (messageSend.Text.Length <= LengthText_mediaMessage ?
+                    (GetLengthText(messageSend.Text) <= LengthText_mediaMessage ?
                     GetInlineKeyboard(messageSend.ButtonsMessage, messageSend.InBot.User.Lang) : default
                     ) : GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang));
                 string textSend = GetLimitText(ref messageSend, LengthText_mediaMessage);
@@ -475,28 +478,100 @@ namespace BotsCore.Bots.BotsModel
             }
             return new InlineKeyboardMarkup(buttons);
         }
-        private static string GetLimitText(ref ObjectDataMessageSend messageSend, uint limit)
+        private static string GetLimitText(ref ObjectDataMessageSend messageSend, int limit)
         {
-            string resul;
-            if (messageSend.Text.Length <= limit)
+            var data = GeneratePartText(messageSend.Text);
+            var replaceData = GetLimitArray(data?.Select(x => (x.Item1.First(), x.Item2)).ToArray(), limit);
+            string SendText = string.Empty;
+            string NotSendText = string.Empty;
+            for (int i = 0; i < data.Length; i++)
             {
-                resul = messageSend.Text;
-                messageSend.Text = string.Empty;
-                return resul;
-            }
-            for (int i = (int)limit - 1; i > 0; i--)
-            {
-                if (messageSend.Text[i] == ' ')
+                if (i < replaceData.item)
                 {
-                    resul = messageSend.Text.Substring(0, i + 1);
-                    messageSend.Text = messageSend.Text.Remove(0, i + 1);
-                    return resul;
+                    SendText += data[i].Item1[data[i].Item2 ? 1 : 0];
+                }
+                else if (i == replaceData.item)
+                {
+                    if (replaceData.countChar == null)
+                    {
+                        SendText += data[i].Item1[data[i].Item2 ? 1 : 0];
+                    }
+                    else
+                    {
+                        SendText += data[i].Item1[0].Substring(0, (int)replaceData.countChar + 1);
+                        NotSendText += data[i].Item1[0].Remove(0, (int)replaceData.countChar + 1);
+                    }
+                }
+                else
+                {
+                    NotSendText += data[i].Item1[data[i].Item2 ? 1 : 0];
                 }
             }
-            resul = messageSend.Text;
-            messageSend.Text = null;
-            return resul;
+            messageSend.Text = NotSendText;
+            return SendText;
+            static (string[], bool)[] GeneratePartText(string text)
+            {
+                string[] splitArray = regexUrl.Split(text);
+                string[][] matchesPart = regexUrl.Matches(text)?.Select(x => new string[] { x.Groups[0].Value.Remove(0, x.Groups[0].Value.IndexOf('[') + 1).Substring(0, x.Groups[0].Value.IndexOf(']')), x.Groups[0].Value }).ToArray();
+                List<(string[], bool)> resul = new List<(string[], bool)>();
+                for (int i = 0; i < splitArray.Length; i++)
+                {
+                    resul.Add((new string[] { splitArray[i] }, false));
+                    if (i < matchesPart.Length)
+                        resul.Add((matchesPart[i], true));
+                }
+                return resul.ToArray();
+            }
+            static (int item, int? countChar) GetLimitArray((string, bool)[] data, int Limit)
+            {
+                int len = 0;
+                for (int i = 0; i < data.Length; i++)
+                {
+                    if ((data[i].Item1.Length + len) <= Limit)
+                    {
+                        len += data[i].Item1.Length;
+                    }
+                    else if (!data[i].Item2)
+                    {
+                        int NewLimit = Limit - len;
+                        int indexReplace = GetLimitOrdinaryText(data[i].Item1, NewLimit);
+                        if (indexReplace != 0)
+                            return (i, indexReplace);
+                        else
+                            return (i - 1, null);
+                    }
+                    else
+                    {
+                        return (i - 1, null);
+                    }
+                }
+                return (data.Length - 1, null);
+            }
+            static int GetLimitOrdinaryText(string text, int limit)
+            {
+                if (text.Length <= limit)
+                {
+                    return text.Length - 1;
+                }
+                char search = '\n';
+            rest:
+                for (int i = (int)limit - 1; i >= 0; i--)
+                {
+                    if (i == 0)
+                    {
+                        search = ' ';
+                        goto rest;
+                    }
+
+                    if (text[i] == search)
+                    {
+                        return i;
+                    }
+                }
+                return text.Length - 1;
+            }
         }
+        private static int GetLengthText(string text) => text != null ? regexUrlLength.Split(text).Select(x => x?.Length ?? 0).Sum() : 0;
         public uint GetMaxLengthButtonText() => LengthText_Buttons;
 
         public struct MessegeInfoOld
