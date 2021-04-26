@@ -11,7 +11,17 @@ namespace BotsCore.Bots.Interface
         public enum BotTypes
         {
             VK,
-            Telegram
+            Telegram,
+            Bot_1,
+            Bot_2,
+            Bot_3,
+            Bot_4,
+            Bot_5,
+            Bot_6,
+            Bot_7,
+            Bot_8,
+            Bot_9,
+            Bot_10
         }
     }
 }

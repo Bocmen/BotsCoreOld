@@ -13,7 +13,7 @@ namespace BotsCore.Bots.Model.Buttons
         public KitButton(Button[][] buttons)
         {
             this.buttons = buttons;
-            List<ObjectCommand> commands = new();
+            List<ObjectCommand> commands = new List<ObjectCommand>();
             foreach (var item in buttons)
                 commands.AddRange(item.Select(x => x.ObjectCommand));
             commandList = new CommandList(commands.ToArray());
@@ -23,10 +23,10 @@ namespace BotsCore.Bots.Model.Buttons
             diective = diective?.Where(x => x != null).ToArray();
             if (diective != null)
             {
-                List<Button[]> resul = new();
+                List<Button[]> resul = new List<Button[]>();
                 for (int y = 0; y < buttons.Length; y++)
                 {
-                    List<Button> resulStr = new();
+                    List<Button> resulStr = new List<Button>();
                     for (int x = 0; x < buttons[y].Length; x++)
                     {
                         if (!diective.Where(N => N.Value.x == x && N.Value.y == y).Any())

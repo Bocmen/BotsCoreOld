@@ -36,7 +36,7 @@ namespace BotsCore.User.Models
         /// Данные о акк ботов
         /// </summary>
         public List<ModelBotUser> BotsAccount { get; private set; } = new List<ModelBotUser>();
-        public Dictionary<string, object> DopInfoUser = new();
+        public Dictionary<string, object> DopInfoUser = new Dictionary<string, object>();
         public string Login;
         public string Password;
         public object this[string key]
@@ -109,7 +109,7 @@ namespace BotsCore.User.Models
             {
                 if (!File.Exists(ManagerUser.PatchTableUsersInfo))
                     SQLiteConnection.CreateFile(ManagerUser.PatchTableUsersInfo);
-                using SQLiteConnection connection = new(ManagerUser.BdConnectionUsersInfo);
+                using SQLiteConnection connection = new SQLiteConnection(ManagerUser.BdConnectionUsersInfo);
                 connection.Open();
                 if (IdTable == null)
                 {
@@ -125,7 +125,7 @@ namespace BotsCore.User.Models
         {
             if (File.Exists(ManagerUser.PatchTableUsersInfo) && IdTable != null)
             {
-                using SQLiteConnection connection = new(ManagerUser.BdConnectionUsersInfo);
+                using SQLiteConnection connection = new SQLiteConnection(ManagerUser.BdConnectionUsersInfo);
                 connection.Open();
                 new SQLiteCommand($"DELETE FROM 'Users' WHERE Id = '{IdTable}';", connection).ExecuteNonQuery();
                 connection.CloseAsync();

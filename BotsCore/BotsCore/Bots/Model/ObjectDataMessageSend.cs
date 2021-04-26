@@ -61,7 +61,7 @@ namespace BotsCore.Bots.Model
                     return (bool)editOldMessage;
                 return Default_EditOldMessage;
             }
-            init
+            set
             {
                 editOldMessage = value;
             }

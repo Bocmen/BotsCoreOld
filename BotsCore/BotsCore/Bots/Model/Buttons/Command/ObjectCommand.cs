@@ -7,8 +7,8 @@ namespace BotsCore.Bots.Model.Buttons.Command
     public class ObjectCommand
     {
         public delegate bool InvokeCommand(ObjectDataMessageInBot inBotData, double degreeSimilarity, object data = null);
-        public InvokeCommand InvokeMethod { get; init; }
-        public object[] Commands { private get; init; }
+        public InvokeCommand InvokeMethod { get; private set; }
+        private object[] Commands;
 
         public ObjectCommand(InvokeCommand method, params object[] commands)
         {

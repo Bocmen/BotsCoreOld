@@ -10,7 +10,7 @@ namespace BotsCore.Bots
 {
     public static class ManagerBots
     {
-        private static readonly Dictionary<string, IBot> botsList = new();
+        private static readonly Dictionary<string, IBot> botsList = new Dictionary<string, IBot>();
         public static void AddBot(IBot bot) => botsList.Add(GetNameBot(bot), bot);
         public static string GetNameBot(IBot bot) => $"N={bot.GetId()}T={bot.GetBotTypes()}";
         public static IBot GetBot(string key)

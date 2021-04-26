@@ -14,7 +14,7 @@ namespace BotsCore.Moduls.Tables.Services
         public ModelMarkerTextData(string appName, string tableName, uint id) : base(appName, tableName, id) { }
         public ModelMarkerTextData(ITable table, uint id) : base(table, id) { }
         public Text GetText() => ((ITableText)propTable).GetDataTextId(id);
-        public ModelMarkerTextData GetElemNewId(uint id) => propTable!= null ? new(propTable, id) : new(appName, tableName, id);
+        public ModelMarkerTextData GetElemNewId(uint id) => propTable!= null ? new ModelMarkerTextData(propTable, id) : new ModelMarkerTextData(appName, tableName, id);
 
         public string GetText(Lang.LangTypes lang) => GetText().GetText(lang);
 

@@ -1,5 +1,6 @@
 ﻿using BotsCore.Bots.Model;
 using System;
+using static BotsCore.Bots.Interface.IBot;
 
 namespace BotsCore.User.Models
 {
@@ -16,15 +17,8 @@ namespace BotsCore.User.Models
         /// <summary>
         /// Тип бота
         /// </summary>
-        public TypeBot bot;
-        /// <summary>
-        /// Типы ботов
-        /// </summary>
-        public enum TypeBot
-        {
-            Telegram,
-            Vk
-        }
+        public BotTypes bot;
+
         public static bool operator ==(BotID a, BotID b) => a?.bot == b?.bot && a?.Id == b?.Id && a.BotKey == b.BotKey;
         public static bool operator !=(BotID a, BotID b) => !(a == b);
 

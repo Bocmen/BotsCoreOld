@@ -16,7 +16,7 @@ namespace BotsCore.Moduls.Translate
         [NonSerialized]
         public static TranslateCore translateCore = new Translator();
         [JsonProperty]
-        private readonly List<(Lang.LangTypes lang, string text)> Data = new();
+        private readonly List<(Lang.LangTypes lang, string text)> Data = new List<(Lang.LangTypes lang, string text)>();
         [JsonProperty]
         public bool LockTranslator = false;
 
@@ -38,6 +38,7 @@ namespace BotsCore.Moduls.Translate
             else
                 throw new ArgumentNullException();
         }
+        private Text() { }
         /// <summary>
         /// Получить текст на заданном языке (в случае отсутствия данных осуществляется автоперевод)
         /// </summary>
@@ -75,7 +76,13 @@ namespace BotsCore.Moduls.Translate
             return false;
         }
         public static bool operator !=(Text t1, object t2) => !(t1 == t2);
-
+        public override bool Equals(object obj)
+        {
+            if (obj is Text text)
+                return text == this;
+            return false;
+        }
+        public override int GetHashCode() => GetDefaultText().GetHashCode();
 
         //=========================================================================================
         /// <summary>
@@ -101,7 +108,7 @@ namespace BotsCore.Moduls.Translate
             restErrorTranslatr: string TranslatedText = translateCore.Translate(string.Join("\n", linesTranslate.Select(x => x.Data[0].text)), lang, linesTranslate[0].Data[0].lang);
                 if (TranslatedText == null) goto restErrorTranslatr;
                 string[] TranslatedLinesText = TranslatedText.Split('\n');
-                List<string> arrayDataAllLines = new();
+                List<string> arrayDataAllLines = new List<string>();
                 int[] CountLines = linesTranslate.Select(x => x.Data[0].text.Split('\n').Length).ToArray();
                 int CountChar = 0;
                 foreach (var count in CountLines)
@@ -116,14 +123,5 @@ namespace BotsCore.Moduls.Translate
                 }
             }
         }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is Text text)
-                return text == this;
-            return false;
-        }
-
-        public override int GetHashCode() => GetDefaultText().GetHashCode();
     }
 }

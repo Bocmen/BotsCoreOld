@@ -18,7 +18,7 @@ namespace BotsCore.User
 
         public static void Start(IObjectSetting setting)
         {
-          //  File.Delete(Path.GetFullPath(setting.GetValue("patchTableUsersInfo")));
+            //  File.Delete(Path.GetFullPath(setting.GetValue("patchTableUsersInfo")));
             PatchTableUsersInfo = setting.GetValue("patchTableUsersInfo");
             BdConnectionUsersInfo = string.Format(setting.GetValue("bdConnectionUsersInfo"), PatchTableUsersInfo);
             if (Directory.Exists(PatchTableUsersInfo))
@@ -46,7 +46,7 @@ namespace BotsCore.User
                 EchoLog.Print("Создана таблица бд пользователей");
             }
         }
-        public static (ModelUser user, ModelBotUser userBot)? GetUser(BotID botID)
+        public static (ModelUser user, ModelBotUser userBot)? GetFirstUserBotID(BotID botID)
         {
             foreach (var user in users)
                 foreach (var botUser in user.BotsAccount)
@@ -54,10 +54,46 @@ namespace BotsCore.User
                         return (user, botUser);
             return null;
         }
+        public static ModelBotUser GetFirstBotUser(Func<ModelBotUser, bool> serachF)
+        {
+            foreach (var user in users)
+                foreach (var botUser in user.BotsAccount)
+                    if (serachF.Invoke(botUser))
+                        return botUser;
+            return null;
+        }
+        public static ModelUser GetFirstUser(Func<ModelUser, bool> serachF)
+        {
+            foreach (var user in users)
+                if (serachF.Invoke(user))
+                    return user;
+            return null;
+        }
+        public static ModelBotUser[] GetBotUsers(Func<ModelBotUser, bool> serachF)
+        {
+            List<ModelBotUser> resul = new();
+            foreach (var user in users)
+                foreach (var botUser in user.BotsAccount)
+                    if (serachF.Invoke(botUser))
+                        resul.Add(botUser);
+            if (resul.Any())
+                return resul.ToArray();
+            return null;
+        }
+        public static ModelUser[] GetUsers(Func<ModelUser, bool> serachF)
+        {
+            List<ModelUser> resul = new();
+            foreach (var user in users)
+                if (serachF.Invoke(user))
+                    resul.Add(user);
+            if (resul.Any())
+                return resul.ToArray();
+            return null;
+        }
         public static bool AddUser(ModelUser modelUser)
         {
             foreach (var botUser in modelUser.BotsAccount)
-                if (GetUser(botUser.BotID) != null)
+                if (GetFirstUserBotID(botUser.BotID) != null)
                     return false;
             modelUser.LoadToDataBD();
             users.Add(modelUser);
@@ -65,7 +101,7 @@ namespace BotsCore.User
         }
         public static void DeliteUser(BotID botID)
         {
-            ModelUser user = GetUser(botID).Value.user;
+            ModelUser user = GetFirstUserBotID(botID).Value.user;
             user.DeliteUserDataBD();
             users.Remove(user);
         }

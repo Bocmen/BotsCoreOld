@@ -6,12 +6,12 @@ using System;
 
 namespace BotsCore.Bots.Model
 {
-    public partial record ObjectDataMessageInBot
+    public partial class ObjectDataMessageInBot
     {
         public delegate void RegisterUser(ObjectDataMessageInBot inBot);
-        public string MessageText { get; init; }
-        public string CallbackData { get; init; }
-        public object DataMessenge { get; init; }
+        public string MessageText;
+        public string CallbackData;
+        public object DataMessenge;
         private IBot botHendler;
         public IBot BotHendler
         {
@@ -26,7 +26,7 @@ namespace BotsCore.Bots.Model
                 botHendler = value;
             }
         }
-        public BotID BotID { get; init; }
+        public BotID BotID;
         public ModelUser User { get; private set; }
         public ModelBotUser BotUser { get; private set; }
 
@@ -42,7 +42,7 @@ namespace BotsCore.Bots.Model
 
         public bool LoadInfo_User(Action<ObjectDataMessageInBot> action)
         {
-            var infoUser = ManagerUser.GetUser(BotID);
+            var infoUser = ManagerUser.GetFirstUserBotID(BotID);
             if (infoUser != null)
             {
                 User = infoUser.Value.user;

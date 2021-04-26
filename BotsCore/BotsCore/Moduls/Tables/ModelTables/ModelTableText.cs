@@ -31,7 +31,7 @@ namespace BotsCore.Moduls.Tables.ModelTables
                 foreach (var lang in langsStandart)
                     Text.MultiTranslate(lang, textsTranslate);
             }
-            Dictionary<uint, Text> newData = new();
+            Dictionary<uint, Text> newData = new Dictionary<uint, Text>();
             foreach (var elem in LoadData)
                 newData.Add(elem.IdElemTable, elem.Item2);
             dataTable = newData;

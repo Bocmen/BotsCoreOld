@@ -10,8 +10,8 @@ namespace BotsCore.Bots.Model.Buttons
         public (IBot.BotTypes typeBot, object data)[] BotAddData;
         public string Url { get; private set; }
         public ObjectCommand ObjectCommand { get; private set; }
-        public Text NameButtonObj { get; init; }
-        public string NameButton { get; init; }
+        public Text NameButtonObj { get; private set; }
+        public string NameButton { get; private set; }
 
         /// <summary>
         /// Создание кнопки у которой её название и команды одинаковы.
@@ -88,13 +88,13 @@ namespace BotsCore.Bots.Model.Buttons
         /// <param name="Url">Ссылка котоая будет открыта</param>
         /// <param name="nameButton">Обьект с названиум кнопки</param>
         /// <returns></returns>
-        public static Button GetButtonOpenUrl(string Url, Text nameButton) => new() { Url = Url, NameButtonObj = nameButton };
+        public static Button GetButtonOpenUrl(string Url, Text nameButton) => new Button() { Url = Url, NameButtonObj = nameButton };
         /// <summary>
         /// Создание кнопки (callback) с открытием ссылки
         /// </summary>
         /// <param name="Url">Ссылка котоая будет открыта</param>
         /// <param name="nameButton">Строка с названием кнопки</param>
         /// <returns></returns>
-        public static Button GetButtonOpenUrl(string Url, string nameButton) => new() { Url = Url, NameButton = nameButton };
+        public static Button GetButtonOpenUrl(string Url, string nameButton) => new Button() { Url = Url, NameButton = nameButton };
     }
 }

@@ -24,16 +24,16 @@ namespace BotsCore.Bots.BotsModel
         private const int LengthText_mediaMessage = 1024;
         private const int LengthText_textMessage = 4096;
         private const int LengthText_Buttons = 32;
-        public TelegramBotClient BotClient { get; init; }
+        public TelegramBotClient BotClient { get; private set; }
         public readonly Telegram.Bot.Types.User botInfo;
         private readonly string NameAppStore;
         private const string LastMessageInfo = "LastMessageInfo";
         private const string LastKeyboardInfo = "LastKeyboardInfo";
-        private static readonly Regex regexUrl = new(@"\[.*\]\(.*\)", RegexOptions.Compiled);
-        private static readonly Regex regexUrlLength = new(@"\[(.*)\]\(.*\)", RegexOptions.Compiled);
+        private static readonly Regex regexUrl = new Regex(@"\[.*\]\(.*\)", RegexOptions.Compiled);
+        private static readonly Regex regexUrlLength = new Regex(@"\[(.*)\]\(.*\)", RegexOptions.Compiled);
         // ======================================================================================== Clear Data
-        private readonly Text Text_ClearMessage = new(Lang.LangTypes.ru, "Сообщение очищено");
-        private readonly Media ClearMediaData = new("http://cdn.onlinewebfonts.com/svg/img_431947.png", MediaType.Photo);
+        private readonly Text Text_ClearMessage = new Text(Lang.LangTypes.ru, "Сообщение очищено");
+        private readonly Media ClearMediaData = new Media("http://cdn.onlinewebfonts.com/svg/img_431947.png", MediaType.Photo);
 
         public TelegramBot(string Token, IObjectSetting setting)
         {
@@ -57,7 +57,7 @@ namespace BotsCore.Bots.BotsModel
         /// <summary>
         /// Метод обработки всех событий бота
         /// </summary>
-        private void Bot_InMessage(Message messageData, string CallbackQueryData = null) => ManagerPage.InMessageBot(new ObjectDataMessageInBot() { DataMessenge = messageData, MessageText = messageData.Text, CallbackData = CallbackQueryData, BotID = new User.Models.BotID() { bot = User.Models.BotID.TypeBot.Telegram, BotKey = ManagerBots.GetNameBot(this), Id = messageData.Chat.Id }, BotHendler = this });
+        private void Bot_InMessage(Message messageData, string CallbackQueryData = null) => ManagerPage.InMessageBot(new ObjectDataMessageInBot() { DataMessenge = messageData, MessageText = messageData.Text, CallbackData = CallbackQueryData, BotID = new User.Models.BotID() { bot = IBot.BotTypes.Telegram, BotKey = ManagerBots.GetNameBot(this), Id = messageData.Chat.Id }, BotHendler = this });
         public IBot.BotTypes GetBotTypes() => IBot.BotTypes.Telegram;
         public string GetId() => botInfo.Id.ToString();
         /// <summary>
@@ -115,7 +115,7 @@ namespace BotsCore.Bots.BotsModel
                             )
                            )
                         {
-                            MessegeInfoOld messegeSendInfo = new()
+                            MessegeInfoOld messegeSendInfo = new MessegeInfoOld()
                             {
                                 TypeMessage = lastMessageInfo.TypeMessage
                             };
@@ -223,7 +223,7 @@ namespace BotsCore.Bots.BotsModel
             {
                 IReplyMarkup replyMarkup = (messageSend.ButtonsKeyboard == default ?
                     (GetLengthText(messageSend.Text) <= LengthText_mediaMessage ?
-                    GetInlineKeyboard(messageSend.ButtonsMessage, messageSend.InBot.User.Lang) : default
+                    (IReplyMarkup)GetInlineKeyboard(messageSend.ButtonsMessage, messageSend.InBot.User.Lang) : default
                     ) : GetReplyKeyboard(messageSend.ButtonsKeyboard, messageSend.InBot.User.Lang));
                 string textSend = GetLimitText(ref messageSend, LengthText_mediaMessage);
                 sendMessageInfo.Add(new MessegeInfoOld[] { new MessegeInfoOld() { Id = SendMedia(messageSend.media.First(), textSend, replyMarkup), EditOldMessege = (messageSend.ButtonsKeyboard == null), TypeMessage = true } });
@@ -297,7 +297,7 @@ namespace BotsCore.Bots.BotsModel
             }
             int SendMedia(Media media, string textSend = null, IReplyMarkup replyMarkup = null)
             {
-                InputOnlineFile file = new(media.Path);
+                InputOnlineFile file = new InputOnlineFile(media.Path);
                 return media.Type switch
                 {
                     MediaType.Photo =>
@@ -309,7 +309,16 @@ namespace BotsCore.Bots.BotsModel
                         replyMarkup: replyMarkup
                         ).Result.MessageId,
 
-                    MediaType.GIF or MediaType.Video =>
+                    MediaType.GIF =>
+                    (BotClient.SendAnimationAsync(
+                        chatId,
+                        file,
+                        caption: textSend,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: replyMarkup
+                    )).Result.MessageId,
+
+                    MediaType.Video =>
                     (BotClient.SendAnimationAsync(
                         chatId,
                         file,

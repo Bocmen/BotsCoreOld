@@ -30,7 +30,7 @@ namespace BotsCore
         /// <summary>
         /// Список обьектов создающих таблицы
         /// </summary>
-        private static readonly List<ICreatePageApp> ListPage = new();
+        private static readonly List<ICreatePageApp> ListPage = new List<ICreatePageApp>();
         /// <summary>
         /// Некоторые настройки
         /// </summary>
@@ -50,7 +50,7 @@ namespace BotsCore
                 {
                     x.AllEditBotUsers(y =>
                     {
-                        if (y.Page.ObjectPage is not Page)
+                        if (!(y.Page.ObjectPage is Page))
                         {
                             y.Page.ObjectPage = GetPageUser(new ObjectDataMessageInBot(x, y));
                         }
