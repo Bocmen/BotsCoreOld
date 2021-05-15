@@ -133,8 +133,7 @@ namespace BotsCore
             if (pageO != null && pageO is Page)
             {
                 Page pageOpen = inBot.BotUser.Page.ObjectPage as Page;
-                if (pageOpen != null)
-                    pageOpen.EventClose(inBot);
+                pageOpen?.EventClose(inBot);
                 inBot.BotUser.Page = new User.Models.ModelBotUser.DataPage() { NameApp = nameApp, NamePage = namePage, ObjectPage = pageO };
                 ((Page)inBot.BotUser.Page.ObjectPage).EventOpen(inBot, pageOpen?.GetType(), sendDataNewPage);
                 return true;
