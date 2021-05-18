@@ -15,6 +15,7 @@ namespace BotsCore.User
         private static List<ModelUser> users = new();
         public static string PatchTableUsersInfo { get; private set; }
         public static string BdConnectionUsersInfo { get; private set; }
+        public static uint CountUser => (uint)users.Count;
 
         public static void Start(IObjectSetting setting)
         {

@@ -105,22 +105,30 @@ namespace BotsCore.Moduls.Translate
             }
             else
             {
-            restErrorTranslatr: string TranslatedText = translateCore.Translate(string.Join("\n", linesTranslate.Select(x => x.Data[0].text)), lang, linesTranslate[0].Data[0].lang);
+                string text = string.Join(".🛠.", linesTranslate.Select(x => x.Data[0].text));
+            restErrorTranslatr: string TranslatedText = translateCore.Translate(text, lang, linesTranslate[0].Data[0].lang);
                 if (TranslatedText == null) goto restErrorTranslatr;
-                string[] TranslatedLinesText = TranslatedText.Split('\n');
-                List<string> arrayDataAllLines = new List<string>();
-                int[] CountLines = linesTranslate.Select(x => x.Data[0].text.Split('\n').Length).ToArray();
-                int CountChar = 0;
-                foreach (var count in CountLines)
-                {
-                    arrayDataAllLines.Add(string.Join("\n", TranslatedLinesText.Skip(CountChar).Take(count)));
-                    CountChar += count;
-                }
-                for (int i = 0; i < linesTranslate.Count; i++)
-                {
-                    if (linesTranslate[i].Data.FirstOrDefault(x => x.lang == lang) == default)
-                        linesTranslate[i].Data.Add((lang, arrayDataAllLines[i]));
-                }
+                string[] TranslatedLinesText = TranslatedText.Split(".🛠.");
+                if (linesTranslate.Count == TranslatedLinesText.Length)
+                    for (int i = 0; i < linesTranslate.Count; i++)
+                    {
+                        if (linesTranslate[i].Data.FirstOrDefault(x => x.lang == lang) == default)
+                            linesTranslate[i].Data.Add((lang, TranslatedLinesText[i]));
+                    }
+                //string[] TranslatedLinesText = TranslatedText.Split('\n');
+                //List<string> arrayDataAllLines = new List<string>();
+                //int[] CountLines = linesTranslate.Select(x => x.Data[0].text.Split('\n').Length).ToArray();
+                //int CountChar = 0;
+                //foreach (var count in CountLines)
+                //{
+                //    arrayDataAllLines.Add(string.Join("\n", TranslatedLinesText.Skip(CountChar).Take(count)));
+                //    CountChar += count;
+                //}
+                //for (int i = 0; i < linesTranslate.Count; i++)
+                //{
+                //    if (linesTranslate[i].Data.FirstOrDefault(x => x.lang == lang) == default)
+                //        linesTranslate[i].Data.Add((lang, arrayDataAllLines[i]));
+                //}
             }
         }
     }

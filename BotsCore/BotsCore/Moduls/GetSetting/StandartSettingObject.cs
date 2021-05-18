@@ -46,6 +46,6 @@ namespace BotsCore.Moduls.GetSetting
             }
         }
 
-        public string GetValue(string key) => Data[key];
+        public string GetValue(string key) => Data.ContainsKey(key) ? Data[key] : null;
     }
 }
